@@ -54,6 +54,7 @@ import static io.airlift.testing.Assertions.assertInstanceOf;
 import static io.prestosql.plugin.cassandra.CassandraTestingUtils.TABLE_ALL_TYPES;
 import static io.prestosql.plugin.cassandra.CassandraTestingUtils.createTestTables;
 import static io.prestosql.spi.connector.ConnectorSplitManager.SplitSchedulingStrategy.UNGROUPED_SCHEDULING;
+import static io.prestosql.spi.connector.Name.createNonDelimitedName;
 import static io.prestosql.spi.connector.NotPartitionedPartitionHandle.NOT_PARTITIONED;
 import static io.prestosql.spi.type.BigintType.BIGINT;
 import static io.prestosql.spi.type.BooleanType.BOOLEAN;
@@ -76,7 +77,7 @@ public class TestCassandraConnector
     protected static final String INVALID_DATABASE = "totally_invalid_database";
     private static final Date DATE = new Date();
     private static final ConnectorSession SESSION = new TestingConnectorSession(
-            "user",
+            createNonDelimitedName("user"),
             Optional.of("test"),
             Optional.empty(),
             UTC_KEY,

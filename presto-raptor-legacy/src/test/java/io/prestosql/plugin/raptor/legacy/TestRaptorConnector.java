@@ -63,6 +63,7 @@ import static io.prestosql.plugin.raptor.legacy.RaptorTableProperties.TEMPORAL_C
 import static io.prestosql.plugin.raptor.legacy.metadata.SchemaDaoUtil.createTablesWithRetry;
 import static io.prestosql.plugin.raptor.legacy.metadata.TestDatabaseShardManager.createShardManager;
 import static io.prestosql.plugin.raptor.legacy.storage.TestOrcStorageManager.createOrcStorageManager;
+import static io.prestosql.spi.connector.Name.createNonDelimitedName;
 import static io.prestosql.spi.transaction.IsolationLevel.READ_COMMITTED;
 import static io.prestosql.spi.type.BigintType.BIGINT;
 import static io.prestosql.spi.type.DateType.DATE;
@@ -215,7 +216,7 @@ public class TestRaptorConnector
             throws Exception
     {
         ConnectorSession session = new TestingConnectorSession(
-                "user",
+                createNonDelimitedName("user"),
                 Optional.of("test"),
                 Optional.empty(),
                 getTimeZoneKey(userTimeZone),

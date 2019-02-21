@@ -19,6 +19,7 @@ import org.testng.annotations.Test;
 import java.util.Optional;
 
 import static io.airlift.json.JsonCodec.jsonCodec;
+import static io.prestosql.spi.connector.Name.createNonDelimitedName;
 import static org.testng.Assert.assertEquals;
 
 public class TestSelectedRole
@@ -31,7 +32,7 @@ public class TestSelectedRole
     {
         assertJsonRoundTrip(new SelectedRole(SelectedRole.Type.ALL, Optional.empty()));
         assertJsonRoundTrip(new SelectedRole(SelectedRole.Type.NONE, Optional.empty()));
-        assertJsonRoundTrip(new SelectedRole(SelectedRole.Type.ROLE, Optional.of("role")));
+        assertJsonRoundTrip(new SelectedRole(SelectedRole.Type.ROLE, Optional.of(createNonDelimitedName("role"))));
     }
 
     private static void assertJsonRoundTrip(SelectedRole expected)
@@ -45,7 +46,7 @@ public class TestSelectedRole
     {
         assertToStringRoundTrip(new SelectedRole(SelectedRole.Type.ALL, Optional.empty()));
         assertToStringRoundTrip(new SelectedRole(SelectedRole.Type.NONE, Optional.empty()));
-        assertToStringRoundTrip(new SelectedRole(SelectedRole.Type.ROLE, Optional.of("role")));
+        assertToStringRoundTrip(new SelectedRole(SelectedRole.Type.ROLE, Optional.of(createNonDelimitedName("role"))));
     }
 
     private static void assertToStringRoundTrip(SelectedRole expected)

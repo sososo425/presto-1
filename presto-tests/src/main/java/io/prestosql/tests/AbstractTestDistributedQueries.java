@@ -41,6 +41,7 @@ import static com.google.common.util.concurrent.Uninterruptibles.sleepUninterrup
 import static io.airlift.units.Duration.nanosSince;
 import static io.prestosql.SystemSessionProperties.QUERY_MAX_MEMORY;
 import static io.prestosql.connector.informationSchema.InformationSchemaMetadata.INFORMATION_SCHEMA;
+import static io.prestosql.spi.connector.Name.createNonDelimitedName;
 import static io.prestosql.spi.type.VarcharType.VARCHAR;
 import static io.prestosql.testing.MaterializedResult.resultBuilder;
 import static io.prestosql.testing.TestingAccessControlManager.TestingPrivilegeType.ADD_COLUMN;
@@ -884,7 +885,7 @@ public abstract class AbstractTestDistributedQueries
         skipTestUnless(supportsViews());
 
         Session viewOwnerSession = TestingSession.testSessionBuilder()
-                .setIdentity(new Identity("test_view_access_owner", Optional.empty()))
+                .setIdentity(new Identity(createNonDelimitedName("test_view_access_owner"), Optional.empty()))
                 .setCatalog(getSession().getCatalog().get())
                 .setSchema(getSession().getSchema().get())
                 .build();
@@ -917,7 +918,7 @@ public abstract class AbstractTestDistributedQueries
                 privilege(getSession().getUser(), "orders", SELECT_COLUMN));
 
         Session nestedViewOwnerSession = TestingSession.testSessionBuilder()
-                .setIdentity(new Identity("test_nested_view_access_owner", Optional.empty()))
+                .setIdentity(new Identity(createNonDelimitedName("test_nested_view_access_owner"), Optional.empty()))
                 .setCatalog(getSession().getCatalog().get())
                 .setSchema(getSession().getSchema().get())
                 .build();

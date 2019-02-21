@@ -53,6 +53,7 @@ import java.util.concurrent.TimeUnit;
 import static io.prestosql.SystemSessionProperties.isLegacyTimestamp;
 import static io.prestosql.operator.scalar.DateTimeFunctions.currentDate;
 import static io.prestosql.spi.StandardErrorCode.INVALID_FUNCTION_ARGUMENT;
+import static io.prestosql.spi.connector.Name.createNonDelimitedName;
 import static io.prestosql.spi.type.BigintType.BIGINT;
 import static io.prestosql.spi.type.DoubleType.DOUBLE;
 import static io.prestosql.spi.type.TimeWithTimeZoneType.TIME_WITH_TIME_ZONE;
@@ -160,7 +161,7 @@ public abstract class TestDateTimeFunctionsBase
     private void assertCurrentDateAtInstant(TimeZoneKey timeZoneKey, long instant)
     {
         long expectedDays = epochDaysInZone(timeZoneKey, instant);
-        long dateTimeCalculation = currentDate(new TestingConnectorSession("test", Optional.empty(), Optional.empty(), timeZoneKey, US, instant, ImmutableList.of(), ImmutableMap.of(), isLegacyTimestamp(session)));
+        long dateTimeCalculation = currentDate(new TestingConnectorSession(createNonDelimitedName("test"), Optional.empty(), Optional.empty(), timeZoneKey, US, instant, ImmutableList.of(), ImmutableMap.of(), isLegacyTimestamp(session)));
         assertEquals(dateTimeCalculation, expectedDays);
     }
 

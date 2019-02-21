@@ -30,6 +30,11 @@ public interface ConnectorSession
         return getIdentity().getUser();
     }
 
+    default Name getOrignalUserName()
+    {
+        return getIdentity().getUserName();
+    }
+
     ConnectorIdentity getIdentity();
 
     TimeZoneKey getTimeZoneKey();

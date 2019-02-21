@@ -32,6 +32,7 @@ import io.prestosql.spi.connector.ConnectorTableLayoutResult;
 import io.prestosql.spi.connector.ConnectorTableMetadata;
 import io.prestosql.spi.connector.ConnectorViewDefinition;
 import io.prestosql.spi.connector.Constraint;
+import io.prestosql.spi.connector.Name;
 import io.prestosql.spi.connector.SchemaTableName;
 import io.prestosql.spi.connector.SchemaTablePrefix;
 import io.prestosql.spi.connector.SystemTable;
@@ -158,10 +159,26 @@ public class ClassLoaderSafeConnectorMetadata
     }
 
     @Override
+    public boolean schemaExists(ConnectorSession session, Name schemaName)
+    {
+        try (ThreadContextClassLoader ignored = new ThreadContextClassLoader(classLoader)) {
+            return delegate.schemaExists(session, schemaName);
+        }
+    }
+
+    @Override
     public List<String> listSchemaNames(ConnectorSession session)
     {
         try (ThreadContextClassLoader ignored = new ThreadContextClassLoader(classLoader)) {
             return delegate.listSchemaNames(session);
+        }
+    }
+
+    @Override
+    public List<Name> listCaseSensitiveSchemaNames(ConnectorSession session)
+    {
+        try (ThreadContextClassLoader ignored = new ThreadContextClassLoader(classLoader)) {
+            return delegate.listCaseSensitiveSchemaNames(session);
         }
     }
 
@@ -214,10 +231,26 @@ public class ClassLoaderSafeConnectorMetadata
     }
 
     @Override
+    public List<SchemaTableName> listCaseSensitiveTables(ConnectorSession session, Optional<Name> schemaName)
+    {
+        try (ThreadContextClassLoader ignored = new ThreadContextClassLoader(classLoader)) {
+            return delegate.listCaseSensitiveTables(session, schemaName);
+        }
+    }
+
+    @Override
     public Map<String, ColumnHandle> getColumnHandles(ConnectorSession session, ConnectorTableHandle tableHandle)
     {
         try (ThreadContextClassLoader ignored = new ThreadContextClassLoader(classLoader)) {
             return delegate.getColumnHandles(session, tableHandle);
+        }
+    }
+
+    @Override
+    public Map<Name, ColumnHandle> getCaseSensitiveColumnHandles(ConnectorSession session, ConnectorTableHandle tableHandle)
+    {
+        try (ThreadContextClassLoader ignored = new ThreadContextClassLoader(classLoader)) {
+            return delegate.getCaseSensitiveColumnHandles(session, tableHandle);
         }
     }
 
@@ -262,6 +295,14 @@ public class ClassLoaderSafeConnectorMetadata
     }
 
     @Override
+    public void createSchema(ConnectorSession session, Name schemaName, Map<String, Object> properties)
+    {
+        try (ThreadContextClassLoader ignored = new ThreadContextClassLoader(classLoader)) {
+            delegate.createSchema(session, schemaName, properties);
+        }
+    }
+
+    @Override
     public void dropSchema(ConnectorSession session, String schemaName)
     {
         try (ThreadContextClassLoader ignored = new ThreadContextClassLoader(classLoader)) {
@@ -270,7 +311,23 @@ public class ClassLoaderSafeConnectorMetadata
     }
 
     @Override
+    public void dropSchema(ConnectorSession session, Name schemaName)
+    {
+        try (ThreadContextClassLoader ignored = new ThreadContextClassLoader(classLoader)) {
+            delegate.dropSchema(session, schemaName);
+        }
+    }
+
+    @Override
     public void renameSchema(ConnectorSession session, String source, String target)
+    {
+        try (ThreadContextClassLoader ignored = new ThreadContextClassLoader(classLoader)) {
+            delegate.renameSchema(session, source, target);
+        }
+    }
+
+    @Override
+    public void renameSchema(ConnectorSession session, Name source, Name target)
     {
         try (ThreadContextClassLoader ignored = new ThreadContextClassLoader(classLoader)) {
             delegate.renameSchema(session, source, target);
@@ -390,6 +447,14 @@ public class ClassLoaderSafeConnectorMetadata
     }
 
     @Override
+    public List<SchemaTableName> listCaseSensitiveViews(ConnectorSession session, Optional<Name> schemaName)
+    {
+        try (ThreadContextClassLoader ignored = new ThreadContextClassLoader(classLoader)) {
+            return delegate.listCaseSensitiveViews(session, schemaName);
+        }
+    }
+
+    @Override
     public Map<SchemaTableName, ConnectorViewDefinition> getViews(ConnectorSession session, SchemaTablePrefix prefix)
     {
         try (ThreadContextClassLoader ignored = new ThreadContextClassLoader(classLoader)) {
@@ -454,7 +519,23 @@ public class ClassLoaderSafeConnectorMetadata
     }
 
     @Override
+    public void createRole(ConnectorSession session, Name role, Optional<PrestoPrincipal> grantor)
+    {
+        try (ThreadContextClassLoader ignored = new ThreadContextClassLoader(classLoader)) {
+            delegate.createRole(session, role, grantor);
+        }
+    }
+
+    @Override
     public void dropRole(ConnectorSession session, String role)
+    {
+        try (ThreadContextClassLoader ignored = new ThreadContextClassLoader(classLoader)) {
+            delegate.dropRole(session, role);
+        }
+    }
+
+    @Override
+    public void dropRole(ConnectorSession session, Name role)
     {
         try (ThreadContextClassLoader ignored = new ThreadContextClassLoader(classLoader)) {
             delegate.dropRole(session, role);
@@ -466,6 +547,14 @@ public class ClassLoaderSafeConnectorMetadata
     {
         try (ThreadContextClassLoader ignored = new ThreadContextClassLoader(classLoader)) {
             return delegate.listRoles(session);
+        }
+    }
+
+    @Override
+    public Set<Name> listCaseSensitiveRoles(ConnectorSession session)
+    {
+        try (ThreadContextClassLoader ignored = new ThreadContextClassLoader(classLoader)) {
+            return delegate.listCaseSensitiveRoles(session);
         }
     }
 
@@ -486,10 +575,26 @@ public class ClassLoaderSafeConnectorMetadata
     }
 
     @Override
+    public void grantCaseSensitiveRoles(ConnectorSession connectorSession, Set<Name> roles, Set<PrestoPrincipal> grantees, boolean withAdminOption, Optional<PrestoPrincipal> grantor)
+    {
+        try (ThreadContextClassLoader ignored = new ThreadContextClassLoader(classLoader)) {
+            delegate.grantCaseSensitiveRoles(connectorSession, roles, grantees, withAdminOption, grantor);
+        }
+    }
+
+    @Override
     public void revokeRoles(ConnectorSession connectorSession, Set<String> roles, Set<PrestoPrincipal> grantees, boolean adminOptionFor, Optional<PrestoPrincipal> grantor)
     {
         try (ThreadContextClassLoader ignored = new ThreadContextClassLoader(classLoader)) {
             delegate.revokeRoles(connectorSession, roles, grantees, adminOptionFor, grantor);
+        }
+    }
+
+    @Override
+    public void revokeCaseSensitiveRoles(ConnectorSession connectorSession, Set<Name> roles, Set<PrestoPrincipal> grantees, boolean adminOptionFor, Optional<PrestoPrincipal> grantor)
+    {
+        try (ThreadContextClassLoader ignored = new ThreadContextClassLoader(classLoader)) {
+            delegate.revokeCaseSensitiveRoles(connectorSession, roles, grantees, adminOptionFor, grantor);
         }
     }
 
@@ -506,6 +611,14 @@ public class ClassLoaderSafeConnectorMetadata
     {
         try (ThreadContextClassLoader ignored = new ThreadContextClassLoader(classLoader)) {
             return delegate.listEnabledRoles(session);
+        }
+    }
+
+    @Override
+    public Set<Name> listEnabledCaseSensitiveRoles(ConnectorSession session)
+    {
+        try (ThreadContextClassLoader ignored = new ThreadContextClassLoader(classLoader)) {
+            return delegate.listEnabledCaseSensitiveRoles(session);
         }
     }
 

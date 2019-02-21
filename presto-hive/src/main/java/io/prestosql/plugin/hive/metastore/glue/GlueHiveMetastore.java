@@ -78,6 +78,7 @@ import io.prestosql.plugin.hive.metastore.glue.converter.GlueInputConverter;
 import io.prestosql.plugin.hive.metastore.glue.converter.GlueToPrestoConverter;
 import io.prestosql.spi.PrestoException;
 import io.prestosql.spi.connector.ColumnNotFoundException;
+import io.prestosql.spi.connector.Name;
 import io.prestosql.spi.connector.SchemaNotFoundException;
 import io.prestosql.spi.connector.SchemaTableName;
 import io.prestosql.spi.connector.TableNotFoundException;
@@ -110,6 +111,7 @@ import static io.prestosql.plugin.hive.metastore.thrift.ThriftMetastoreUtil.getH
 import static io.prestosql.plugin.hive.metastore.thrift.ThriftMetastoreUtil.updateStatisticsParameters;
 import static io.prestosql.spi.StandardErrorCode.ALREADY_EXISTS;
 import static io.prestosql.spi.StandardErrorCode.NOT_SUPPORTED;
+import static io.prestosql.spi.connector.Name.createNonDelimitedName;
 import static io.prestosql.spi.security.PrincipalType.USER;
 import static java.util.Objects.requireNonNull;
 import static java.util.function.UnaryOperator.identity;
@@ -124,7 +126,7 @@ public class GlueHiveMetastore
     private static final Logger log = Logger.get(GlueHiveMetastore.class);
 
     private static final String PUBLIC_ROLE_NAME = "public";
-    private static final String DEFAULT_METASTORE_USER = "presto";
+    private static final Name DEFAULT_METASTORE_USER = createNonDelimitedName("presto");
     private static final String WILDCARD_EXPRESSION = "";
     private static final int BATCH_GET_PARTITION_MAX_PAGE_SIZE = 1000;
     private static final int BATCH_CREATE_PARTITION_MAX_PAGE_SIZE = 100;

@@ -18,31 +18,47 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.Objects;
 
-import static io.prestosql.spi.connector.SchemaUtil.checkNotEmpty;
-import static java.util.Locale.ENGLISH;
+import static io.prestosql.spi.connector.Name.createNonDelimitedName;
+import static java.util.Objects.requireNonNull;
 
 public class SchemaTableName
 {
-    private final String schemaName;
-    private final String tableName;
+    private final Name schemaName;
+    private final Name tableName;
 
     @JsonCreator
-    public SchemaTableName(@JsonProperty("schema") String schemaName, @JsonProperty("table") String tableName)
+    public SchemaTableName(@JsonProperty("schema") Name schemaName, @JsonProperty("table") Name tableName)
     {
-        this.schemaName = checkNotEmpty(schemaName, "schemaName").toLowerCase(ENGLISH);
-        this.tableName = checkNotEmpty(tableName, "tableName").toLowerCase(ENGLISH);
+        this.schemaName = requireNonNull(schemaName, "SchemaName part is null");
+        this.tableName = requireNonNull(tableName, "TableName is null");
+    }
+
+    @Deprecated
+    public SchemaTableName(String schemaName, String tableName)
+    {
+        this(createNonDelimitedName(schemaName), createNonDelimitedName(tableName));
     }
 
     @JsonProperty("schema")
-    public String getSchemaName()
+    public Name getOriginalSchemaName()
     {
-        return schemaName;
+        return this.schemaName;
     }
 
     @JsonProperty("table")
+    public Name getOriginalTableName()
+    {
+        return this.tableName;
+    }
+
+    public String getSchemaName()
+    {
+        return schemaName.getLegacyName();
+    }
+
     public String getTableName()
     {
-        return tableName;
+        return tableName.getLegacyName();
     }
 
     @Override
@@ -68,7 +84,7 @@ public class SchemaTableName
     @Override
     public String toString()
     {
-        return schemaName + '.' + tableName;
+        return schemaName.getLegacyName() + '.' + tableName.getLegacyName();
     }
 
     public SchemaTablePrefix toSchemaTablePrefix()

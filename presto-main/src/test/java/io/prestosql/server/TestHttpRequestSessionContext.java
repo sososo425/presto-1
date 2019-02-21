@@ -39,6 +39,7 @@ import static io.prestosql.client.PrestoHeaders.PRESTO_SESSION;
 import static io.prestosql.client.PrestoHeaders.PRESTO_SOURCE;
 import static io.prestosql.client.PrestoHeaders.PRESTO_TIME_ZONE;
 import static io.prestosql.client.PrestoHeaders.PRESTO_USER;
+import static io.prestosql.spi.connector.Name.createNonDelimitedName;
 import static org.testng.Assert.assertEquals;
 
 public class TestHttpRequestSessionContext
@@ -72,7 +73,7 @@ public class TestHttpRequestSessionContext
         assertEquals(context.getCatalog(), "testCatalog");
         assertEquals(context.getSchema(), "testSchema");
         assertEquals(context.getPath(), "testPath");
-        assertEquals(context.getIdentity(), new Identity("testUser", Optional.empty()));
+        assertEquals(context.getIdentity(), new Identity(createNonDelimitedName("testUser"), Optional.empty()));
         assertEquals(context.getClientInfo(), "client-info");
         assertEquals(context.getLanguage(), "zh-TW");
         assertEquals(context.getTimeZoneId(), "Asia/Taipei");
@@ -81,7 +82,7 @@ public class TestHttpRequestSessionContext
         assertEquals(context.getIdentity().getRoles(), ImmutableMap.of(
                 "foo_connector", new SelectedRole(SelectedRole.Type.ALL, Optional.empty()),
                 "bar_connector", new SelectedRole(SelectedRole.Type.NONE, Optional.empty()),
-                "foobar_connector", new SelectedRole(SelectedRole.Type.ROLE, Optional.of("role"))));
+                "foobar_connector", new SelectedRole(SelectedRole.Type.ROLE, Optional.of(createNonDelimitedName("role")))));
         assertEquals(context.getIdentity().getExtraCredentials(), ImmutableMap.of("test.token.foo", "bar", "test.token.abc", "xyz"));
     }
 

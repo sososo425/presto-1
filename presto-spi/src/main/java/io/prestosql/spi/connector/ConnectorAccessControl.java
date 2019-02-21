@@ -19,6 +19,7 @@ import io.prestosql.spi.security.Privilege;
 
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static io.prestosql.spi.security.AccessDeniedException.denyAddColumn;
 import static io.prestosql.spi.security.AccessDeniedException.denyCreateRole;
@@ -62,6 +63,11 @@ public interface ConnectorAccessControl
         denyCreateSchema(schemaName);
     }
 
+    default void checkCanCreateSchema(ConnectorTransactionHandle transactionHandle, ConnectorIdentity identity, Name schemaName)
+    {
+        checkCanCreateSchema(transactionHandle, identity, schemaName.getLegacyName());
+    }
+
     /**
      * Check if identity is allowed to drop the specified schema in this catalog.
      *
@@ -72,6 +78,11 @@ public interface ConnectorAccessControl
         denyDropSchema(schemaName);
     }
 
+    default void checkCanDropSchema(ConnectorTransactionHandle transactionHandle, ConnectorIdentity identity, Name schemaName)
+    {
+        checkCanDropSchema(transactionHandle, identity, schemaName);
+    }
+
     /**
      * Check if identity is allowed to rename the specified schema in this catalog.
      *
@@ -80,6 +91,11 @@ public interface ConnectorAccessControl
     default void checkCanRenameSchema(ConnectorTransactionHandle transactionHandle, ConnectorIdentity identity, String schemaName, String newSchemaName)
     {
         denyRenameSchema(schemaName, newSchemaName);
+    }
+
+    default void checkCanRenameSchema(ConnectorTransactionHandle transactionHandle, ConnectorIdentity identity, Name schemaName, Name newSchemaName)
+    {
+        checkCanRenameSchema(transactionHandle, identity, schemaName.getLegacyName(), newSchemaName.getLegacyName());
     }
 
     /**
@@ -102,6 +118,13 @@ public interface ConnectorAccessControl
     default Set<String> filterSchemas(ConnectorTransactionHandle transactionHandle, ConnectorIdentity identity, Set<String> schemaNames)
     {
         return emptySet();
+    }
+
+    default Set<Name> filterOriginalSchemas(ConnectorTransactionHandle transactionHandle, ConnectorIdentity identity, Set<Name> schemaNames)
+    {
+        return filterSchemas(transactionHandle, identity, schemaNames.stream()
+                .map(Name::getLegacyName).collect(Collectors.toSet())).stream()
+                    .map(Name::createNonDelimitedName).collect(Collectors.toSet());
     }
 
     /**
@@ -146,6 +169,11 @@ public interface ConnectorAccessControl
     default void checkCanShowTablesMetadata(ConnectorTransactionHandle transactionHandle, ConnectorIdentity identity, String schemaName)
     {
         denyShowTablesMetadata(schemaName);
+    }
+
+    default void checkCanShowTablesMetadata(ConnectorTransactionHandle transactionHandle, ConnectorIdentity identity, Name schemaName)
+    {
+        checkCanShowTablesMetadata(transactionHandle, identity, schemaName.getLegacyName());
     }
 
     /**
@@ -281,9 +309,19 @@ public interface ConnectorAccessControl
         denyCreateRole(role);
     }
 
+    default void checkCanCreateRole(ConnectorTransactionHandle transactionHandle, ConnectorIdentity identity, Name role, Optional<PrestoPrincipal> grantor)
+    {
+        checkCanCreateRole(transactionHandle, identity, role.getLegacyName(), grantor);
+    }
+
     default void checkCanDropRole(ConnectorTransactionHandle transactionHandle, ConnectorIdentity identity, String role)
     {
         denyDropRole(role);
+    }
+
+    default void checkCanDropRole(ConnectorTransactionHandle transactionHandle, ConnectorIdentity identity, Name role)
+    {
+        checkCanDropRole(transactionHandle, identity, role.getLegacyName());
     }
 
     default void checkCanGrantRoles(ConnectorTransactionHandle transactionHandle, ConnectorIdentity identity, Set<String> roles, Set<PrestoPrincipal> grantees, boolean withAdminOption, Optional<PrestoPrincipal> grantor, String catalogName)
@@ -291,14 +329,29 @@ public interface ConnectorAccessControl
         denyGrantRoles(roles, grantees);
     }
 
+    default void checkCanGrantRoles(ConnectorTransactionHandle transactionHandle, ConnectorIdentity identity, Set<Name> roles, Set<PrestoPrincipal> grantees, boolean withAdminOption, Optional<PrestoPrincipal> grantor, Name catalogName)
+    {
+        checkCanGrantRoles(transactionHandle, identity, roles.stream().map(Name::getLegacyName).collect(Collectors.toSet()), grantees, withAdminOption, grantor, catalogName.getLegacyName());
+    }
+
     default void checkCanRevokeRoles(ConnectorTransactionHandle transactionHandle, ConnectorIdentity identity, Set<String> roles, Set<PrestoPrincipal> grantees, boolean adminOptionFor, Optional<PrestoPrincipal> grantor, String catalogName)
     {
         denyRevokeRoles(roles, grantees);
     }
 
+    default void checkCanRevokeRoles(ConnectorTransactionHandle transactionHandle, ConnectorIdentity identity, Set<Name> roles, Set<PrestoPrincipal> grantees, boolean adminOptionFor, Optional<PrestoPrincipal> grantor, Name catalogName)
+    {
+        checkCanRevokeRoles(transactionHandle, identity, roles.stream().map(Name::getLegacyName).collect(Collectors.toSet()), grantees, adminOptionFor, grantor, catalogName.getLegacyName());
+    }
+
     default void checkCanSetRole(ConnectorTransactionHandle transactionHandle, ConnectorIdentity identity, String role, String catalogName)
     {
         denySetRole(role);
+    }
+
+    default void checkCanSetRole(ConnectorTransactionHandle transactionHandle, ConnectorIdentity identity, Name role, Name catalogName)
+    {
+        checkCanSetRole(transactionHandle, identity, role, catalogName);
     }
 
     /**
@@ -311,6 +364,11 @@ public interface ConnectorAccessControl
         denyShowRoles(catalogName);
     }
 
+    default void checkCanShowRoles(ConnectorTransactionHandle transactionHandle, ConnectorIdentity identity, Name catalogName)
+    {
+        checkCanShowRoles(transactionHandle, identity, catalogName.getLegacyName());
+    }
+
     /**
      * Check if identity is allowed to show current roles on the specified catalog.
      *
@@ -321,6 +379,11 @@ public interface ConnectorAccessControl
         denyShowCurrentRoles(catalogName);
     }
 
+    default void checkCanShowCurrentRoles(ConnectorTransactionHandle transactionHandle, ConnectorIdentity identity, Name catalogName)
+    {
+        checkCanShowCurrentRoles(transactionHandle, identity, catalogName.getLegacyName());
+    }
+
     /**
      * Check if identity is allowed to show its own role grants on the specified catalog.
      *
@@ -329,5 +392,10 @@ public interface ConnectorAccessControl
     default void checkCanShowRoleGrants(ConnectorTransactionHandle transactionHandle, ConnectorIdentity identity, String catalogName)
     {
         denyShowRoleGrants(catalogName);
+    }
+
+    default void checkCanShowRoleGrants(ConnectorTransactionHandle transactionHandle, ConnectorIdentity identity, Name catalogName)
+    {
+        checkCanShowRoleGrants(transactionHandle, identity, catalogName.getLegacyName());
     }
 }

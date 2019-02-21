@@ -150,7 +150,7 @@ public final class Session
 
     public String getUser()
     {
-        return identity.getUser();
+        return identity.getUser().getLegacyName();
     }
 
     public Identity getIdentity()
@@ -447,7 +447,7 @@ public final class Session
                 queryId.toString(),
                 transactionId,
                 clientTransactionSupport,
-                identity.getUser(),
+                identity.getUser().getLegacyName(),
                 identity.getPrincipal().map(Principal::toString),
                 source,
                 catalog,

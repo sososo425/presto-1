@@ -13,6 +13,8 @@
  */
 package io.prestosql.spi.security;
 
+import io.prestosql.spi.connector.Name;
+
 import java.security.Principal;
 import java.util.HashMap;
 import java.util.Map;
@@ -24,17 +26,17 @@ import static java.util.Objects.requireNonNull;
 
 public class ConnectorIdentity
 {
-    private final String user;
+    private final Name user;
     private final Optional<Principal> principal;
     private final Optional<SelectedRole> role;
     private final Map<String, String> extraCredentials;
 
-    public ConnectorIdentity(String user, Optional<Principal> principal, Optional<SelectedRole> role)
+    public ConnectorIdentity(Name user, Optional<Principal> principal, Optional<SelectedRole> role)
     {
         this(user, principal, role, emptyMap());
     }
 
-    public ConnectorIdentity(String user, Optional<Principal> principal, Optional<SelectedRole> role, Map<String, String> extraCredentials)
+    public ConnectorIdentity(Name user, Optional<Principal> principal, Optional<SelectedRole> role, Map<String, String> extraCredentials)
     {
         this.user = requireNonNull(user, "user is null");
         this.principal = requireNonNull(principal, "principal is null");
@@ -43,6 +45,11 @@ public class ConnectorIdentity
     }
 
     public String getUser()
+    {
+        return user.getLegacyName();
+    }
+
+    public Name getUserName()
     {
         return user;
     }

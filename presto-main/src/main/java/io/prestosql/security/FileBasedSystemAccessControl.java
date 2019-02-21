@@ -185,7 +185,7 @@ public class FileBasedSystemAccessControl
     private boolean canAccessCatalog(Identity identity, String catalogName)
     {
         for (CatalogAccessControlRule rule : catalogRules) {
-            Optional<Boolean> allowed = rule.match(identity.getUser(), catalogName);
+            Optional<Boolean> allowed = rule.match(identity.getUser().getLegacyName(), catalogName);
             if (allowed.isPresent()) {
                 return allowed.get();
             }

@@ -15,28 +15,44 @@ package io.prestosql.spi.connector;
 
 import java.util.Objects;
 
-import static java.util.Locale.ENGLISH;
+import static io.prestosql.spi.connector.Name.createNonDelimitedName;
 import static java.util.Objects.requireNonNull;
 
 public final class CatalogSchemaName
 {
-    private final String catalogName;
-    private final String schemaName;
+    private final Name catalogName;
+    private final Name schemaName;
 
+    @Deprecated
     public CatalogSchemaName(String catalogName, String schemaName)
     {
-        this.catalogName = requireNonNull(catalogName, "catalogName is null").toLowerCase(ENGLISH);
-        this.schemaName = requireNonNull(schemaName, "schemaName is null").toLowerCase(ENGLISH);
+        this(createNonDelimitedName(catalogName), createNonDelimitedName(schemaName));
     }
 
-    public String getCatalogName()
+    public CatalogSchemaName(Name catalogName, Name schemaName)
+    {
+        this.catalogName = requireNonNull(catalogName, "CatalogName is null");
+        this.schemaName = requireNonNull(schemaName, "SchemaName is null");
+    }
+
+    public Name getOriginalCatalogName()
     {
         return catalogName;
     }
 
-    public String getSchemaName()
+    public Name getOriginalSchemaName()
     {
         return schemaName;
+    }
+
+    public String getCatalogName()
+    {
+        return catalogName.getLegacyName();
+    }
+
+    public String getSchemaName()
+    {
+        return schemaName.getLegacyName();
     }
 
     @Override
@@ -62,6 +78,6 @@ public final class CatalogSchemaName
     @Override
     public String toString()
     {
-        return catalogName + '.' + schemaName;
+        return catalogName.getLegacyName() + '.' + schemaName.getLegacyName();
     }
 }

@@ -34,6 +34,7 @@ import java.util.stream.Collectors;
 
 import static io.prestosql.spi.StandardErrorCode.GENERIC_INTERNAL_ERROR;
 import static io.prestosql.spi.StandardErrorCode.NOT_SUPPORTED;
+import static io.prestosql.spi.connector.Name.createNonDelimitedName;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.toList;
@@ -50,9 +51,26 @@ public interface ConnectorMetadata
     }
 
     /**
+     * Checks if a schema exists. The connector may have schemas that exist
+     * but are not enumerable via {@link #listSchemaNames}.
+     */
+    default boolean schemaExists(ConnectorSession session, Name schemaName)
+    {
+        return listSchemaNames(session).contains(schemaName);
+    }
+
+    /**
      * Returns the schemas provided by this connector.
      */
     List<String> listSchemaNames(ConnectorSession session);
+
+    /**
+     * Returns the schemas provided by this connector.
+     */
+    default List<Name> listCaseSensitiveSchemaNames(ConnectorSession session)
+    {
+        return listSchemaNames(session).stream().map(Name::createNonDelimitedName).collect(Collectors.toList());
+    }
 
     /**
      * Returns a table handle for the specified table name, or null if the connector does not contain the table.
@@ -140,12 +158,22 @@ public interface ConnectorMetadata
         return emptyList();
     }
 
+    default List<SchemaTableName> listCaseSensitiveTables(ConnectorSession session, Optional<Name> schemaName)
+    {
+        return listTables(session, schemaName.map(Name::getLegacyName));
+    }
+
     /**
      * Gets all of the columns on the specified table, or an empty map if the columns can not be enumerated.
      *
      * @throws RuntimeException if table handle is no longer valid
      */
     Map<String, ColumnHandle> getColumnHandles(ConnectorSession session, ConnectorTableHandle tableHandle);
+
+    default Map<Name, ColumnHandle> getCaseSensitiveColumnHandles(ConnectorSession session, ConnectorTableHandle tableHandle)
+    {
+        return getColumnHandles(session, tableHandle).entrySet().stream().collect(Collectors.toMap(entry -> createNonDelimitedName(entry.getKey()), Map.Entry::getValue));
+    }
 
     /**
      * Gets the metadata for the specified table column.
@@ -175,6 +203,11 @@ public interface ConnectorMetadata
         throw new PrestoException(NOT_SUPPORTED, "This connector does not support creating schemas");
     }
 
+    default void createSchema(ConnectorSession session, Name schemaName, Map<String, Object> properties)
+    {
+        createSchema(session, schemaName.getLegacyName(), properties);
+    }
+
     /**
      * Drops the specified schema.
      *
@@ -185,12 +218,22 @@ public interface ConnectorMetadata
         throw new PrestoException(NOT_SUPPORTED, "This connector does not support dropping schemas");
     }
 
+    default void dropSchema(ConnectorSession session, Name schemaName)
+    {
+        dropSchema(session, schemaName.getLegacyName());
+    }
+
     /**
      * Renames the specified schema.
      */
     default void renameSchema(ConnectorSession session, String source, String target)
     {
         throw new PrestoException(NOT_SUPPORTED, "This connector does not support renaming schemas");
+    }
+
+    default void renameSchema(ConnectorSession session, Name source, Name target)
+    {
+        renameSchema(session, source.getLegacyName(), source.getLegacyName());
     }
 
     /**
@@ -233,6 +276,14 @@ public interface ConnectorMetadata
      * Rename the specified column
      */
     default void renameColumn(ConnectorSession session, ConnectorTableHandle tableHandle, ColumnHandle source, String target)
+    {
+        throw new PrestoException(NOT_SUPPORTED, "This connector does not support renaming columns");
+    }
+
+    /**
+     * Rename the specified column
+     */
+    default void renameColumn(ConnectorSession session, ConnectorTableHandle tableHandle, ColumnHandle source, Name target)
     {
         throw new PrestoException(NOT_SUPPORTED, "This connector does not support renaming columns");
     }
@@ -407,6 +458,11 @@ public interface ConnectorMetadata
         return emptyList();
     }
 
+    default List<SchemaTableName> listCaseSensitiveViews(ConnectorSession session, Optional<Name> schemaName)
+    {
+        return emptyList();
+    }
+
     /**
      * Gets the view data for views that match the specified table prefix.
      */
@@ -451,6 +507,11 @@ public interface ConnectorMetadata
         throw new PrestoException(NOT_SUPPORTED, "This connector does not support create role");
     }
 
+    default void createRole(ConnectorSession session, Name role, Optional<PrestoPrincipal> grantor)
+    {
+        createRole(session, role.getLegacyName(), grantor);
+    }
+
     /**
      * Drops the specified role.
      */
@@ -459,12 +520,22 @@ public interface ConnectorMetadata
         throw new PrestoException(NOT_SUPPORTED, "This connector does not support drop role");
     }
 
+    default void dropRole(ConnectorSession session, Name role)
+    {
+        dropRole(session, role.getLegacyName());
+    }
+
     /**
      * List available roles.
      */
     default Set<String> listRoles(ConnectorSession session)
     {
         throw new PrestoException(NOT_SUPPORTED, "This connector does not support roles");
+    }
+
+    default Set<Name> listCaseSensitiveRoles(ConnectorSession session)
+    {
+        return listRoles(session).stream().map(Name::createNonDelimitedName).collect(Collectors.toSet());
     }
 
     /**
@@ -485,12 +556,22 @@ public interface ConnectorMetadata
         throw new PrestoException(NOT_SUPPORTED, "This connector does not support roles");
     }
 
+    default void grantCaseSensitiveRoles(ConnectorSession connectorSession, Set<Name> roles, Set<PrestoPrincipal> grantees, boolean withAdminOption, Optional<PrestoPrincipal> grantor)
+    {
+        grantRoles(connectorSession, roles.stream().map(Name::getLegacyName).collect(Collectors.toSet()), grantees, withAdminOption, grantor);
+    }
+
     /**
      * Revokes the specified roles from the specified grantees
      *
      * @param grantor represents the principal specified by GRANTED BY statement
      */
     default void revokeRoles(ConnectorSession connectorSession, Set<String> roles, Set<PrestoPrincipal> grantees, boolean adminOptionFor, Optional<PrestoPrincipal> grantor)
+    {
+        throw new PrestoException(NOT_SUPPORTED, "This connector does not support roles");
+    }
+
+    default void revokeCaseSensitiveRoles(ConnectorSession connectorSession, Set<Name> roles, Set<PrestoPrincipal> grantees, boolean adminOptionFor, Optional<PrestoPrincipal> grantor)
     {
         throw new PrestoException(NOT_SUPPORTED, "This connector does not support roles");
     }
@@ -509,6 +590,11 @@ public interface ConnectorMetadata
     default Set<String> listEnabledRoles(ConnectorSession session)
     {
         throw new PrestoException(NOT_SUPPORTED, "This connector does not support roles");
+    }
+
+    default Set<Name> listEnabledCaseSensitiveRoles(ConnectorSession session)
+    {
+        return listEnabledRoles(session).stream().map(Name::createNonDelimitedName).collect(Collectors.toSet());
     }
 
     /**

@@ -19,6 +19,7 @@ import com.google.common.collect.Maps;
 import io.prestosql.execution.QueryIdGenerator;
 import io.prestosql.spi.PrestoException;
 import io.prestosql.spi.connector.ConnectorSession;
+import io.prestosql.spi.connector.Name;
 import io.prestosql.spi.security.ConnectorIdentity;
 import io.prestosql.spi.session.PropertyMetadata;
 import io.prestosql.spi.type.TimeZoneKey;
@@ -31,6 +32,7 @@ import java.util.Optional;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
 import static io.prestosql.spi.StandardErrorCode.INVALID_SESSION_PROPERTY;
+import static io.prestosql.spi.connector.Name.createNonDelimitedName;
 import static io.prestosql.spi.type.TimeZoneKey.UTC_KEY;
 import static java.util.Locale.ENGLISH;
 import static java.util.Objects.requireNonNull;
@@ -54,11 +56,11 @@ public class TestingConnectorSession
 
     public TestingConnectorSession(List<PropertyMetadata<?>> properties)
     {
-        this("user", Optional.of("test"), Optional.empty(), UTC_KEY, ENGLISH, System.currentTimeMillis(), properties, ImmutableMap.of(), new FeaturesConfig().isLegacyTimestamp());
+        this(createNonDelimitedName("user"), Optional.of("test"), Optional.empty(), UTC_KEY, ENGLISH, System.currentTimeMillis(), properties, ImmutableMap.of(), new FeaturesConfig().isLegacyTimestamp());
     }
 
     public TestingConnectorSession(
-            String user,
+            Name user,
             Optional<String> source,
             Optional<String> traceToken,
             TimeZoneKey timeZoneKey,

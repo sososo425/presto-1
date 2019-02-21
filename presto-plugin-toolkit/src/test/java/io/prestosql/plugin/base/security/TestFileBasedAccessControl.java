@@ -25,6 +25,7 @@ import org.testng.annotations.Test;
 import java.io.IOException;
 import java.util.Optional;
 
+import static io.prestosql.spi.connector.Name.createNonDelimitedName;
 import static io.prestosql.spi.testing.InterfaceTestUtils.assertAllMethodsOverridden;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.testng.Assert.assertThrows;
@@ -95,7 +96,7 @@ public class TestFileBasedAccessControl
 
     private static ConnectorIdentity user(String name)
     {
-        return new ConnectorIdentity(name, Optional.empty(), Optional.empty());
+        return new ConnectorIdentity(createNonDelimitedName(name), Optional.empty(), Optional.empty());
     }
 
     private ConnectorAccessControl createAccessControl(String fileName)

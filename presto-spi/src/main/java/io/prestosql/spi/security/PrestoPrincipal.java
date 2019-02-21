@@ -15,22 +15,30 @@ package io.prestosql.spi.security;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.prestosql.spi.connector.Name;
 
 import java.util.Objects;
 
-import static java.util.Locale.ENGLISH;
+import static io.prestosql.spi.connector.Name.createNonDelimitedName;
 import static java.util.Objects.requireNonNull;
 
 public class PrestoPrincipal
 {
     private final PrincipalType type;
-    private final String name;
+    private final Name name;
 
     @JsonCreator
-    public PrestoPrincipal(@JsonProperty("type") PrincipalType type, @JsonProperty("name") String name)
+    public PrestoPrincipal(@JsonProperty("type") PrincipalType type, @JsonProperty("name") Name name)
     {
         this.type = requireNonNull(type, "type is null");
-        this.name = requireNonNull(name, "name is null").toLowerCase(ENGLISH);
+        this.name = requireNonNull(name, "name is null");
+    }
+
+    @JsonCreator
+    public PrestoPrincipal(PrincipalType type, String name)
+    {
+        this.type = requireNonNull(type, "type is null");
+        this.name = createNonDelimitedName(requireNonNull(name, "name is null"));
     }
 
     @JsonProperty
@@ -40,9 +48,14 @@ public class PrestoPrincipal
     }
 
     @JsonProperty
-    public String getName()
+    public Name getOriginalName()
     {
         return name;
+    }
+
+    public String getName()
+    {
+        return name.getLegacyName();
     }
 
     @Override

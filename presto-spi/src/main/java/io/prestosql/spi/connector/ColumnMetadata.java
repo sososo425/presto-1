@@ -19,15 +19,14 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 
-import static io.prestosql.spi.connector.SchemaUtil.checkNotEmpty;
+import static io.prestosql.spi.connector.Name.createNonDelimitedName;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.unmodifiableMap;
-import static java.util.Locale.ENGLISH;
 import static java.util.Objects.requireNonNull;
 
 public class ColumnMetadata
 {
-    private final String name;
+    private final Name name;
     private final Type type;
     private final String comment;
     private final String extraInfo;
@@ -51,11 +50,16 @@ public class ColumnMetadata
 
     public ColumnMetadata(String name, Type type, String comment, String extraInfo, boolean hidden, Map<String, Object> properties)
     {
-        checkNotEmpty(name, "name");
+        this(createNonDelimitedName(name), type, comment, extraInfo, hidden, properties);
+    }
+
+    public ColumnMetadata(Name name, Type type, String comment, String extraInfo, boolean hidden, Map<String, Object> properties)
+    {
+        requireNonNull(name, "Name is null");
         requireNonNull(type, "type is null");
         requireNonNull(properties, "properties is null");
 
-        this.name = name.toLowerCase(ENGLISH);
+        this.name = name;
         this.type = type;
         this.comment = comment;
         this.extraInfo = extraInfo;
@@ -64,6 +68,11 @@ public class ColumnMetadata
     }
 
     public String getName()
+    {
+        return name.getLegacyName();
+    }
+
+    public Name getOriginalName()
     {
         return name;
     }

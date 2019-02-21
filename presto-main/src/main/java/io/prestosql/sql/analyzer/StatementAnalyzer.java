@@ -157,6 +157,7 @@ import static io.prestosql.metadata.FunctionKind.WINDOW;
 import static io.prestosql.metadata.MetadataUtil.createQualifiedObjectName;
 import static io.prestosql.spi.StandardErrorCode.INVALID_FUNCTION_ARGUMENT;
 import static io.prestosql.spi.StandardErrorCode.NOT_FOUND;
+import static io.prestosql.spi.connector.Name.createNonDelimitedName;
 import static io.prestosql.spi.type.BigintType.BIGINT;
 import static io.prestosql.spi.type.BooleanType.BOOLEAN;
 import static io.prestosql.spi.type.VarcharType.VARCHAR;
@@ -1897,7 +1898,7 @@ class StatementAnalyzer
                 Identity identity;
                 AccessControl viewAccessControl;
                 if (owner.isPresent() && !owner.get().equals(session.getIdentity().getUser())) {
-                    identity = new Identity(owner.get(), Optional.empty());
+                    identity = new Identity(createNonDelimitedName(owner.get()), Optional.empty());
                     viewAccessControl = new ViewAccessControl(accessControl);
                 }
                 else {

@@ -40,6 +40,7 @@ import java.util.Optional;
 import static io.airlift.log.Level.WARN;
 import static io.airlift.units.Duration.nanosSince;
 import static io.prestosql.plugin.tpch.TpchMetadata.TINY_SCHEMA_NAME;
+import static io.prestosql.spi.connector.Name.createNonDelimitedName;
 import static io.prestosql.spi.security.SelectedRole.Type.ROLE;
 import static io.prestosql.testing.TestingSession.testSessionBuilder;
 import static io.prestosql.tests.QueryAssertions.copyTpchTables;
@@ -86,7 +87,7 @@ public final class HiveQueryRunner
         assertEquals(DateTimeZone.getDefault(), TIME_ZONE, "Timezone not configured correctly. Add -Duser.timezone=America/Bahia_Banderas to your JVM arguments");
         setupLogging();
 
-        DistributedQueryRunner queryRunner = new DistributedQueryRunner(createSession(Optional.of(new SelectedRole(ROLE, Optional.of("admin")))), 4, extraProperties);
+        DistributedQueryRunner queryRunner = new DistributedQueryRunner(createSession(Optional.of(new SelectedRole(ROLE, Optional.of(createNonDelimitedName("admin"))))), 4, extraProperties);
 
         try {
             queryRunner.installPlugin(new TpchPlugin());
@@ -151,7 +152,7 @@ public final class HiveQueryRunner
     {
         return testSessionBuilder()
                 .setIdentity(new Identity(
-                        "hive",
+                        createNonDelimitedName("hive"),
                         Optional.empty(),
                         role.map(selectedRole -> ImmutableMap.of("hive", selectedRole))
                                 .orElse(ImmutableMap.of())))
@@ -164,7 +165,7 @@ public final class HiveQueryRunner
     {
         return testSessionBuilder()
                 .setIdentity(new Identity(
-                        "hive",
+                        createNonDelimitedName("hive"),
                         Optional.empty(),
                         role.map(selectedRole -> ImmutableMap.of("hive", selectedRole))
                                 .orElse(ImmutableMap.of())))

@@ -35,6 +35,7 @@ import java.util.Optional;
 
 import static io.prestosql.connector.ConnectorId.createInformationSchemaConnectorId;
 import static io.prestosql.connector.ConnectorId.createSystemTablesConnectorId;
+import static io.prestosql.spi.connector.Name.createNonDelimitedName;
 import static java.util.Locale.ENGLISH;
 
 public final class TestingSession
@@ -62,7 +63,7 @@ public final class TestingSession
     {
         return Session.builder(sessionPropertyManager)
                 .setQueryId(queryIdGenerator.createNextQueryId())
-                .setIdentity(new Identity("user", Optional.empty()))
+                .setIdentity(new Identity(createNonDelimitedName("user"), Optional.empty()))
                 .setSource("test")
                 .setCatalog("catalog")
                 .setSchema("schema")

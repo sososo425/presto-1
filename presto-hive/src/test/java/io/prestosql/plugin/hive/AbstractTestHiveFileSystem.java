@@ -96,6 +96,7 @@ import static io.prestosql.plugin.hive.HiveTestUtils.getDefaultHiveRecordCursorP
 import static io.prestosql.plugin.hive.HiveTestUtils.getDefaultOrcFileWriterFactory;
 import static io.prestosql.plugin.hive.HiveTestUtils.getTypes;
 import static io.prestosql.spi.connector.ConnectorSplitManager.SplitSchedulingStrategy.UNGROUPED_SCHEDULING;
+import static io.prestosql.spi.connector.Name.createNonDelimitedName;
 import static io.prestosql.spi.type.BigintType.BIGINT;
 import static io.prestosql.testing.MaterializedResult.materializeSourceDataStream;
 import static java.util.Locale.ENGLISH;
@@ -106,7 +107,7 @@ import static org.testng.Assert.assertTrue;
 
 public abstract class AbstractTestHiveFileSystem
 {
-    private static final HdfsContext TESTING_CONTEXT = new HdfsContext(new ConnectorIdentity("test", Optional.empty(), Optional.empty()));
+    private static final HdfsContext TESTING_CONTEXT = new HdfsContext(new ConnectorIdentity(createNonDelimitedName("test"), Optional.empty(), Optional.empty()));
 
     protected String database;
     protected SchemaTableName table;

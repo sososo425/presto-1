@@ -26,6 +26,7 @@ import java.util.Optional;
 
 import static io.airlift.tpch.TpchTable.NATION;
 import static io.prestosql.plugin.hive.HiveQueryRunner.createQueryRunner;
+import static io.prestosql.spi.connector.Name.createNonDelimitedName;
 import static io.prestosql.testing.TestingSession.testSessionBuilder;
 
 public class TestHiveFileBasedSecurity
@@ -66,6 +67,6 @@ public class TestHiveFileBasedSecurity
         return testSessionBuilder()
                 .setCatalog(queryRunner.getDefaultSession().getCatalog().get())
                 .setSchema(queryRunner.getDefaultSession().getSchema().get())
-                .setIdentity(new Identity(user, Optional.empty())).build();
+                .setIdentity(new Identity(createNonDelimitedName(user), Optional.empty())).build();
     }
 }

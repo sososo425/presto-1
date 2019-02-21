@@ -15,6 +15,7 @@ package io.prestosql.spi.security;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.prestosql.spi.connector.Name;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -33,10 +34,10 @@ public class SelectedRole
     private static final Pattern PATTERN = Pattern.compile("(ROLE|ALL|NONE)(\\{(.+?)\\})?");
 
     private final Type type;
-    private final Optional<String> role;
+    private final Optional<Name> role;
 
     @JsonCreator
-    public SelectedRole(@JsonProperty("type") Type type, @JsonProperty("role") Optional<String> role)
+    public SelectedRole(@JsonProperty("type") Type type, @JsonProperty("role") Optional<Name> role)
     {
         this.type = requireNonNull(type, "type is null");
         this.role = requireNonNull(role, "role is null");
@@ -45,16 +46,21 @@ public class SelectedRole
         }
     }
 
-    @JsonProperty
+    @JsonProperty("type")
     public Type getType()
     {
         return type;
     }
 
-    @JsonProperty
-    public Optional<String> getRole()
+    @JsonProperty("role")
+    public Optional<Name> getRoleName()
     {
         return role;
+    }
+
+    public Optional<String> getRole()
+    {
+        return role.map(Name::getLegacyName);
     }
 
     @Override
@@ -92,7 +98,7 @@ public class SelectedRole
         if (m.matches()) {
             Type type = Type.valueOf(m.group(1));
             Optional<String> role = Optional.ofNullable(m.group(3));
-            return new SelectedRole(type, role);
+            return new SelectedRole(type, role.map(Name::createNonDelimitedName));
         }
         throw new IllegalArgumentException("Could not parse selected role: " + value);
     }

@@ -34,6 +34,7 @@ import java.util.Set;
 import static com.google.common.io.Files.copy;
 import static io.prestosql.plugin.base.security.FileBasedAccessControlConfig.SECURITY_CONFIG_FILE;
 import static io.prestosql.plugin.base.security.FileBasedAccessControlConfig.SECURITY_REFRESH_PERIOD;
+import static io.prestosql.spi.connector.Name.createNonDelimitedName;
 import static io.prestosql.spi.security.PrincipalType.USER;
 import static io.prestosql.spi.security.Privilege.SELECT;
 import static io.prestosql.spi.testing.InterfaceTestUtils.assertAllMethodsOverridden;
@@ -47,22 +48,22 @@ import static org.testng.Assert.assertThrows;
 
 public class TestFileBasedSystemAccessControl
 {
-    private static final Identity alice = new Identity("alice", Optional.empty());
-    private static final Identity kerberosValidAlice = new Identity("alice", Optional.of(new KerberosPrincipal("alice/example.com@EXAMPLE.COM")));
-    private static final Identity kerberosValidNonAsciiUser = new Identity("\u0194\u0194\u0194", Optional.of(new KerberosPrincipal("\u0194\u0194\u0194/example.com@EXAMPLE.COM")));
-    private static final Identity kerberosInvalidAlice = new Identity("alice", Optional.of(new KerberosPrincipal("mallory/example.com@EXAMPLE.COM")));
-    private static final Identity kerberosValidShare = new Identity("alice", Optional.of(new KerberosPrincipal("valid/example.com@EXAMPLE.COM")));
-    private static final Identity kerberosInValidShare = new Identity("alice", Optional.of(new KerberosPrincipal("invalid/example.com@EXAMPLE.COM")));
-    private static final Identity validSpecialRegexWildDot = new Identity(".*", Optional.of(new KerberosPrincipal("special/.*@EXAMPLE.COM")));
-    private static final Identity validSpecialRegexEndQuote = new Identity("\\E", Optional.of(new KerberosPrincipal("special/\\E@EXAMPLE.COM")));
-    private static final Identity invalidSpecialRegex = new Identity("alice", Optional.of(new KerberosPrincipal("special/.*@EXAMPLE.COM")));
-    private static final Identity bob = new Identity("bob", Optional.empty());
-    private static final Identity admin = new Identity("admin", Optional.empty());
-    private static final Identity nonAsciiUser = new Identity("\u0194\u0194\u0194", Optional.empty());
+    private static final Identity alice = new Identity(createNonDelimitedName("alice"), Optional.empty());
+    private static final Identity kerberosValidAlice = new Identity(createNonDelimitedName("alice"), Optional.of(new KerberosPrincipal("alice/example.com@EXAMPLE.COM")));
+    private static final Identity kerberosValidNonAsciiUser = new Identity(createNonDelimitedName("\u0194\u0194\u0194"), Optional.of(new KerberosPrincipal("\u0194\u0194\u0194/example.com@EXAMPLE.COM")));
+    private static final Identity kerberosInvalidAlice = new Identity(createNonDelimitedName("alice"), Optional.of(new KerberosPrincipal("mallory/example.com@EXAMPLE.COM")));
+    private static final Identity kerberosValidShare = new Identity(createNonDelimitedName("alice"), Optional.of(new KerberosPrincipal("valid/example.com@EXAMPLE.COM")));
+    private static final Identity kerberosInValidShare = new Identity(createNonDelimitedName("alice"), Optional.of(new KerberosPrincipal("invalid/example.com@EXAMPLE.COM")));
+    private static final Identity validSpecialRegexWildDot = new Identity(createNonDelimitedName(".*"), Optional.of(new KerberosPrincipal("special/.*@EXAMPLE.COM")));
+    private static final Identity validSpecialRegexEndQuote = new Identity(createNonDelimitedName("\\E"), Optional.of(new KerberosPrincipal("special/\\E@EXAMPLE.COM")));
+    private static final Identity invalidSpecialRegex = new Identity(createNonDelimitedName("alice"), Optional.of(new KerberosPrincipal("special/.*@EXAMPLE.COM")));
+    private static final Identity bob = new Identity(createNonDelimitedName("bob"), Optional.empty());
+    private static final Identity admin = new Identity(createNonDelimitedName("admin"), Optional.empty());
+    private static final Identity nonAsciiUser = new Identity(createNonDelimitedName("\u0194\u0194\u0194"), Optional.empty());
     private static final Set<String> allCatalogs = ImmutableSet.of("secret", "open-to-all", "all-allowed", "alice-catalog", "allowed-absent", "\u0200\u0200\u0200");
     private static final QualifiedObjectName aliceTable = new QualifiedObjectName("alice-catalog", "schema", "table");
     private static final QualifiedObjectName aliceView = new QualifiedObjectName("alice-catalog", "schema", "view");
-    private static final CatalogSchemaName aliceSchema = new CatalogSchemaName("alice-catalog", "schema");
+    private static final CatalogSchemaName aliceSchema = new CatalogSchemaName(createNonDelimitedName("alice-catalog"), createNonDelimitedName("schema"));
 
     @Test
     public void testCanSetUserOperations()
@@ -71,33 +72,33 @@ public class TestFileBasedSystemAccessControl
         AccessControlManager accessControlManager = newAccessControlManager(transactionManager, "catalog_principal.json");
 
         try {
-            accessControlManager.checkCanSetUser(Optional.empty(), alice.getUser());
+            accessControlManager.checkCanSetUser(Optional.empty(), alice.getUser().getLegacyName());
             throw new AssertionError("expected AccessDeniedExeption");
         }
         catch (AccessDeniedException expected) {
         }
 
-        accessControlManager.checkCanSetUser(kerberosValidAlice.getPrincipal(), kerberosValidAlice.getUser());
-        accessControlManager.checkCanSetUser(kerberosValidNonAsciiUser.getPrincipal(), kerberosValidNonAsciiUser.getUser());
+        accessControlManager.checkCanSetUser(kerberosValidAlice.getPrincipal(), kerberosValidAlice.getUser().getLegacyName());
+        accessControlManager.checkCanSetUser(kerberosValidNonAsciiUser.getPrincipal(), kerberosValidNonAsciiUser.getUser().getLegacyName());
         try {
-            accessControlManager.checkCanSetUser(kerberosInvalidAlice.getPrincipal(), kerberosInvalidAlice.getUser());
+            accessControlManager.checkCanSetUser(kerberosInvalidAlice.getPrincipal(), kerberosInvalidAlice.getUser().getLegacyName());
             throw new AssertionError("expected AccessDeniedExeption");
         }
         catch (AccessDeniedException expected) {
         }
 
-        accessControlManager.checkCanSetUser(kerberosValidShare.getPrincipal(), kerberosValidShare.getUser());
+        accessControlManager.checkCanSetUser(kerberosValidShare.getPrincipal(), kerberosValidShare.getUser().getLegacyName());
         try {
-            accessControlManager.checkCanSetUser(kerberosInValidShare.getPrincipal(), kerberosInValidShare.getUser());
+            accessControlManager.checkCanSetUser(kerberosInValidShare.getPrincipal(), kerberosInValidShare.getUser().getLegacyName());
             throw new AssertionError("expected AccessDeniedExeption");
         }
         catch (AccessDeniedException expected) {
         }
 
-        accessControlManager.checkCanSetUser(validSpecialRegexWildDot.getPrincipal(), validSpecialRegexWildDot.getUser());
-        accessControlManager.checkCanSetUser(validSpecialRegexEndQuote.getPrincipal(), validSpecialRegexEndQuote.getUser());
+        accessControlManager.checkCanSetUser(validSpecialRegexWildDot.getPrincipal(), validSpecialRegexWildDot.getUser().getLegacyName());
+        accessControlManager.checkCanSetUser(validSpecialRegexEndQuote.getPrincipal(), validSpecialRegexEndQuote.getUser().getLegacyName());
         try {
-            accessControlManager.checkCanSetUser(invalidSpecialRegex.getPrincipal(), invalidSpecialRegex.getUser());
+            accessControlManager.checkCanSetUser(invalidSpecialRegex.getPrincipal(), invalidSpecialRegex.getUser().getLegacyName());
             throw new AssertionError("expected AccessDeniedExeption");
         }
         catch (AccessDeniedException expected) {
@@ -105,7 +106,7 @@ public class TestFileBasedSystemAccessControl
 
         TransactionManager transactionManagerNoPatterns = createTestTransactionManager();
         AccessControlManager accessControlManagerNoPatterns = newAccessControlManager(transactionManager, "catalog.json");
-        accessControlManagerNoPatterns.checkCanSetUser(kerberosValidAlice.getPrincipal(), kerberosValidAlice.getUser());
+        accessControlManagerNoPatterns.checkCanSetUser(kerberosValidAlice.getPrincipal(), kerberosValidAlice.getUser().getLegacyName());
     }
 
     @Test

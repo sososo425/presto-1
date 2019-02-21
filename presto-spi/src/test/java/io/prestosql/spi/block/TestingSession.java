@@ -22,6 +22,7 @@ import java.util.Locale;
 import java.util.Optional;
 
 import static io.prestosql.spi.StandardErrorCode.INVALID_SESSION_PROPERTY;
+import static io.prestosql.spi.connector.Name.createNonDelimitedName;
 import static io.prestosql.spi.type.TimeZoneKey.UTC_KEY;
 import static java.util.Locale.ENGLISH;
 
@@ -44,7 +45,7 @@ public final class TestingSession
         @Override
         public ConnectorIdentity getIdentity()
         {
-            return new ConnectorIdentity("user", Optional.empty(), Optional.empty());
+            return new ConnectorIdentity(createNonDelimitedName("user"), Optional.empty(), Optional.empty());
         }
 
         @Override
