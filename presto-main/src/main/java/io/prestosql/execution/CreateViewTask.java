@@ -21,6 +21,7 @@ import io.prestosql.metadata.Metadata;
 import io.prestosql.metadata.QualifiedObjectName;
 import io.prestosql.metadata.ViewDefinition;
 import io.prestosql.security.AccessControl;
+import io.prestosql.spi.connector.Name;
 import io.prestosql.sql.analyzer.Analysis;
 import io.prestosql.sql.analyzer.Analyzer;
 import io.prestosql.sql.analyzer.FeaturesConfig;
@@ -95,7 +96,7 @@ public class CreateViewTask
             owner = Optional.empty();
         }
 
-        String data = codec.toJson(new ViewDefinition(sql, session.getCatalog(), session.getSchema(), columns, owner, !owner.isPresent()));
+        String data = codec.toJson(new ViewDefinition(sql, session.getCatalog().map(Name::getLegacyName), session.getSchema().map(Name::getLegacyName), columns, owner, !owner.isPresent()));
 
         metadata.createView(session, name, data, statement.isReplace());
 

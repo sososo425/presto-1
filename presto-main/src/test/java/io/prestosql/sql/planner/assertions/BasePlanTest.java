@@ -96,7 +96,7 @@ public class BasePlanTest
 
     public ConnectorId getCurrentConnectorId()
     {
-        return queryRunner.inTransaction(transactionSession -> queryRunner.getMetadata().getCatalogHandle(transactionSession, transactionSession.getCatalog().get())).get();
+        return queryRunner.inTransaction(transactionSession -> queryRunner.getMetadata().getCatalogHandle(transactionSession, transactionSession.getCatalog().get().getLegacyName())).get();
     }
 
     protected LocalQueryRunner getQueryRunner()

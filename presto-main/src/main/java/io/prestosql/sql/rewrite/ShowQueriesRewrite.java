@@ -33,6 +33,7 @@ import io.prestosql.spi.PrestoException;
 import io.prestosql.spi.StandardErrorCode;
 import io.prestosql.spi.connector.CatalogSchemaName;
 import io.prestosql.spi.connector.ConnectorTableMetadata;
+import io.prestosql.spi.connector.Name;
 import io.prestosql.spi.connector.SchemaTableName;
 import io.prestosql.spi.security.PrestoPrincipal;
 import io.prestosql.spi.security.PrincipalType;
@@ -216,7 +217,7 @@ final class ShowQueriesRewrite
         @Override
         protected Node visitShowGrants(ShowGrants showGrants, Void context)
         {
-            String catalogName = session.getCatalog().orElse(null);
+            String catalogName = session.getCatalog().map(Name::getLegacyName).orElse(null);
             Optional<Expression> predicate = Optional.empty();
 
             Optional<QualifiedName> tableName = showGrants.getTableName();
@@ -274,7 +275,7 @@ final class ShowQueriesRewrite
                 throw new SemanticException(CATALOG_NOT_SPECIFIED, node, "Catalog must be specified when session catalog is not set");
             }
 
-            String catalog = node.getCatalog().map(c -> c.getValue().toLowerCase(ENGLISH)).orElseGet(() -> session.getCatalog().get());
+            String catalog = node.getCatalog().map(c -> c.getValue().toLowerCase(ENGLISH)).orElseGet(() -> session.getCatalog().get().getLegacyName());
 
             if (node.isCurrent()) {
                 accessControl.checkCanShowCurrentRoles(session.getRequiredTransactionId(), session.getIdentity(), catalog);
@@ -297,7 +298,7 @@ final class ShowQueriesRewrite
                 throw new SemanticException(CATALOG_NOT_SPECIFIED, node, "Catalog must be specified when session catalog is not set");
             }
 
-            String catalog = node.getCatalog().map(c -> c.getValue().toLowerCase(ENGLISH)).orElseGet(() -> session.getCatalog().get());
+            String catalog = node.getCatalog().map(c -> c.getValue().toLowerCase(ENGLISH)).orElseGet(() -> session.getCatalog().get().getLegacyName());
             PrestoPrincipal principal = new PrestoPrincipal(PrincipalType.USER, session.getUser());
 
             accessControl.checkCanShowRoleGrants(session.getRequiredTransactionId(), session.getIdentity(), catalog);
@@ -318,7 +319,7 @@ final class ShowQueriesRewrite
                 throw new SemanticException(CATALOG_NOT_SPECIFIED, node, "Catalog must be specified when session catalog is not set");
             }
 
-            String catalog = node.getCatalog().map(Identifier::getValue).orElseGet(() -> session.getCatalog().get());
+            String catalog = node.getCatalog().map(Identifier::getValue).orElseGet(() -> session.getCatalog().get().getLegacyName());
             accessControl.checkCanShowSchemas(session.getRequiredTransactionId(), session.getIdentity(), catalog);
 
             Optional<Expression> predicate = Optional.empty();

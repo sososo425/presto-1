@@ -25,6 +25,7 @@ import io.prestosql.security.AccessControl;
 import io.prestosql.spi.PrestoException;
 import io.prestosql.spi.QueryId;
 import io.prestosql.spi.connector.ConnectorSession;
+import io.prestosql.spi.connector.Name;
 import io.prestosql.spi.security.Identity;
 import io.prestosql.spi.security.SelectedRole;
 import io.prestosql.spi.session.ResourceEstimates;
@@ -50,6 +51,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static io.prestosql.connector.ConnectorId.createInformationSchemaConnectorId;
 import static io.prestosql.connector.ConnectorId.createSystemTablesConnectorId;
 import static io.prestosql.spi.StandardErrorCode.NOT_FOUND;
+import static io.prestosql.spi.connector.Name.createNonDelimitedName;
 import static io.prestosql.util.Failures.checkCondition;
 import static java.util.Objects.requireNonNull;
 
@@ -60,8 +62,8 @@ public final class Session
     private final boolean clientTransactionSupport;
     private final Identity identity;
     private final Optional<String> source;
-    private final Optional<String> catalog;
-    private final Optional<String> schema;
+    private final Optional<Name> catalog;
+    private final Optional<Name> schema;
     private final SqlPath path;
     private final TimeZoneKey timeZoneKey;
     private final Locale locale;
@@ -85,8 +87,8 @@ public final class Session
             boolean clientTransactionSupport,
             Identity identity,
             Optional<String> source,
-            Optional<String> catalog,
-            Optional<String> schema,
+            Optional<Name> catalog,
+            Optional<Name> schema,
             SqlPath path,
             Optional<String> traceToken,
             TimeZoneKey timeZoneKey,
@@ -163,12 +165,12 @@ public final class Session
         return source;
     }
 
-    public Optional<String> getCatalog()
+    public Optional<Name> getCatalog()
     {
         return catalog;
     }
 
-    public Optional<String> getSchema()
+    public Optional<Name> getSchema()
     {
         return schema;
     }
@@ -447,8 +449,8 @@ public final class Session
                 queryId.toString(),
                 transactionId,
                 clientTransactionSupport,
-                identity.getUser().getLegacyName(),
-                identity.getPrincipal().map(Principal::toString),
+                identity.getUser(),
+                identity.getPrincipal().map(Principal::toString).map(Name::createNonDelimitedName),
                 source,
                 catalog,
                 schema,
@@ -514,8 +516,8 @@ public final class Session
         private boolean clientTransactionSupport;
         private Identity identity;
         private String source;
-        private String catalog;
-        private String schema;
+        private Name catalog;
+        private Name schema;
         private SqlPath path = new SqlPath(Optional.empty());
         private Optional<String> traceToken = Optional.empty();
         private TimeZoneKey timeZoneKey = TimeZoneKey.getTimeZoneKey(TimeZone.getDefault().getID());
@@ -584,6 +586,12 @@ public final class Session
 
         public SessionBuilder setCatalog(String catalog)
         {
+            this.catalog = createNonDelimitedName(catalog);
+            return this;
+        }
+
+        public SessionBuilder setCatalog(Name catalog)
+        {
             this.catalog = catalog;
             return this;
         }
@@ -601,6 +609,12 @@ public final class Session
         }
 
         public SessionBuilder setSchema(String schema)
+        {
+            this.schema = createNonDelimitedName(schema);
+            return this;
+        }
+
+        public SessionBuilder setSchema(Name schema)
         {
             this.schema = schema;
             return this;

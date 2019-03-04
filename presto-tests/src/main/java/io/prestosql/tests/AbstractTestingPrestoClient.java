@@ -29,6 +29,7 @@ import io.prestosql.metadata.QualifiedObjectName;
 import io.prestosql.metadata.QualifiedTablePrefix;
 import io.prestosql.server.testing.TestingPrestoServer;
 import io.prestosql.spi.QueryId;
+import io.prestosql.spi.connector.Name;
 import io.prestosql.spi.session.ResourceEstimates;
 import io.prestosql.spi.type.Type;
 import okhttp3.OkHttpClient;
@@ -146,8 +147,8 @@ public abstract class AbstractTestingPrestoClient<T>
                 session.getTraceToken(),
                 session.getClientTags(),
                 session.getClientInfo().orElse(null),
-                session.getCatalog().orElse(null),
-                session.getSchema().orElse(null),
+                session.getCatalog().map(Name::getLegacyName).orElse(null),
+                session.getSchema().map(Name::getLegacyName).orElse(null),
                 session.getPath().toString(),
                 ZoneId.of(session.getTimeZoneKey().getId()),
                 session.getLocale(),

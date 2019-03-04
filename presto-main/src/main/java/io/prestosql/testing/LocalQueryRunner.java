@@ -105,6 +105,7 @@ import io.prestosql.spi.PageIndexerFactory;
 import io.prestosql.spi.PageSorter;
 import io.prestosql.spi.Plugin;
 import io.prestosql.spi.connector.ConnectorFactory;
+import io.prestosql.spi.connector.Name;
 import io.prestosql.spiller.FileSingleStreamSpillerFactory;
 import io.prestosql.spiller.GenericPartitioningSpillerFactory;
 import io.prestosql.spiller.GenericSpillerFactory;
@@ -533,6 +534,13 @@ public class LocalQueryRunner
         nodeManager.addCurrentNodeConnector(new ConnectorId(catalogName));
         connectorManager.addConnectorFactory(connectorFactory);
         connectorManager.createConnection(catalogName, connectorFactory.getName(), properties);
+    }
+
+    public void createCatalog(Name catalogName, ConnectorFactory connectorFactory, Map<String, String> properties)
+    {
+        nodeManager.addCurrentNodeConnector(new ConnectorId(catalogName.getLegacyName()));
+        connectorManager.addConnectorFactory(connectorFactory);
+        connectorManager.createConnection(catalogName.getLegacyName(), connectorFactory.getName(), properties);
     }
 
     @Override

@@ -202,7 +202,7 @@ public class RuleAssert
                 .singleStatement()
                 .execute(session, session -> {
                     // metadata.getCatalogHandle() registers the catalog for the transaction
-                    session.getCatalog().ifPresent(catalog -> metadata.getCatalogHandle(session, catalog));
+                    session.getCatalog().ifPresent(catalog -> metadata.getCatalogHandle(session, catalog.getLegacyName()));
                     return transactionSessionConsumer.apply(session);
                 });
     }

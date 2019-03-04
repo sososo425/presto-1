@@ -47,6 +47,7 @@ import io.prestosql.spi.connector.ConnectorMetadata;
 import io.prestosql.spi.connector.ConnectorSplitManager;
 import io.prestosql.spi.connector.ConnectorTableMetadata;
 import io.prestosql.spi.connector.ConnectorTransactionHandle;
+import io.prestosql.spi.connector.Name;
 import io.prestosql.spi.connector.SchemaTableName;
 import io.prestosql.spi.session.PropertyMetadata;
 import io.prestosql.spi.transaction.IsolationLevel;
@@ -1403,8 +1404,8 @@ public class TestAnalyzer
         assertFails(INVALID_SCHEMA_NAME, "SHOW TABLES FROM a.b.c");
 
         Session session = testSessionBuilder()
-                .setCatalog(null)
-                .setSchema(null)
+                .setCatalog((Name) null)
+                .setSchema((Name) null)
                 .build();
         assertFails(session, CATALOG_NOT_SPECIFIED, "SHOW TABLES");
         assertFails(session, CATALOG_NOT_SPECIFIED, "SHOW TABLES FROM a");
@@ -1412,7 +1413,7 @@ public class TestAnalyzer
 
         session = testSessionBuilder()
                 .setCatalog(SECOND_CATALOG)
-                .setSchema(null)
+                .setSchema((Name) null)
                 .build();
         assertFails(session, SCHEMA_NOT_SPECIFIED, "SHOW TABLES");
         assertFails(session, MISSING_SCHEMA, "SHOW TABLES FROM unknown");

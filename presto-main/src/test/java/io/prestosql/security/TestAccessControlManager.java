@@ -61,7 +61,7 @@ import static org.testng.Assert.fail;
 
 public class TestAccessControlManager
 {
-    private static final Principal PRINCIPAL = new BasicPrincipal("principal");
+    private static final Principal PRINCIPAL = new BasicPrincipal(createNonDelimitedName("principal"));
     private static final String USER_NAME = "user_name";
 
     @Test(expectedExceptions = PrestoException.class, expectedExceptionsMessageRegExp = "Presto server is still initializing")

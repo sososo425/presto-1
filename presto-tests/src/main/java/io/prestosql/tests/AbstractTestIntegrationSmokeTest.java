@@ -17,6 +17,7 @@ import io.prestosql.testing.MaterializedResult;
 import org.intellij.lang.annotations.Language;
 import org.testng.annotations.Test;
 
+import static io.prestosql.spi.connector.Name.createNonDelimitedName;
 import static io.prestosql.spi.type.VarcharType.VARCHAR;
 import static io.prestosql.testing.assertions.Assert.assertEquals;
 import static io.prestosql.tests.QueryAssertions.assertContains;
@@ -107,7 +108,7 @@ public abstract class AbstractTestIntegrationSmokeTest
         MaterializedResult actualSchemas = computeActual("SHOW SCHEMAS").toTestTypes();
 
         MaterializedResult.Builder resultBuilder = MaterializedResult.resultBuilder(getQueryRunner().getDefaultSession(), VARCHAR)
-                .row(getQueryRunner().getDefaultSession().getSchema().orElse("tpch"));
+                .row(getQueryRunner().getDefaultSession().getSchema().orElse(createNonDelimitedName("tpch")));
 
         assertContains(actualSchemas, resultBuilder.build());
     }
@@ -132,8 +133,8 @@ public abstract class AbstractTestIntegrationSmokeTest
     @Test
     public void testSelectInformationSchemaTables()
     {
-        String catalog = getSession().getCatalog().get();
-        String schema = getSession().getSchema().get();
+        String catalog = getSession().getCatalog().get().getCaseNormalizedName();
+        String schema = getSession().getSchema().get().getCaseNormalizedName();
         String schemaPattern = schema.replaceAll("^.", "_");
 
         assertQuery("SELECT table_name FROM information_schema.tables WHERE table_schema = '" + schema + "' AND table_name = 'orders'", "VALUES 'orders'");
@@ -141,7 +142,7 @@ public abstract class AbstractTestIntegrationSmokeTest
         assertQuery("SELECT table_name FROM information_schema.tables WHERE table_schema LIKE '" + schemaPattern + "' AND table_name LIKE '%rders'", "VALUES 'orders'");
         assertQuery(
                 "SELECT table_name FROM information_schema.tables " +
-                        "WHERE table_catalog = '" + catalog + "' AND table_schema LIKE '" + schema + "' AND table_name LIKE '%orders'",
+                        "WHERE table_catalog = '" + catalog + "' AND table_schema LIKE '" + schema + "' ANDa table_name LIKE '%orders'",
                 "VALUES 'orders'");
         assertQuery("SELECT table_name FROM information_schema.tables WHERE table_catalog = 'something_else'", "SELECT '' WHERE false");
     }
@@ -149,8 +150,8 @@ public abstract class AbstractTestIntegrationSmokeTest
     @Test
     public void testSelectInformationSchemaColumns()
     {
-        String catalog = getSession().getCatalog().get();
-        String schema = getSession().getSchema().get();
+        String catalog = getSession().getCatalog().get().getCaseNormalizedName();
+        String schema = getSession().getSchema().get().getCaseNormalizedName();
         String schemaPattern = schema.replaceAll(".$", "_");
 
         @Language("SQL") String ordersTableWithColumns = "VALUES " +

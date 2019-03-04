@@ -41,6 +41,7 @@ import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Throwables.throwIfInstanceOf;
 import static io.prestosql.plugin.password.jndi.JndiUtils.createDirContext;
+import static io.prestosql.spi.connector.Name.createNonDelimitedName;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -108,7 +109,7 @@ public class LdapAuthenticator
             checkForGroupMembership(user, context);
 
             log.debug("Authentication successful for user [%s]", user);
-            return new BasicPrincipal(user);
+            return new BasicPrincipal(createNonDelimitedName(user));
         }
         catch (AuthenticationException e) {
             log.debug("Authentication failed for user [%s]: %s", user, e.getMessage());

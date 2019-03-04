@@ -130,6 +130,6 @@ public class RuleTester
 
     public ConnectorId getCurrentConnectorId()
     {
-        return queryRunner.inTransaction(transactionSession -> metadata.getCatalogHandle(transactionSession, session.getCatalog().get())).get();
+        return queryRunner.inTransaction(transactionSession -> metadata.getCatalogHandle(transactionSession, session.getCatalog().get().getLegacyName())).get();
     }
 }

@@ -3821,14 +3821,14 @@ public abstract class AbstractTestQueries
     public void testShowCatalogsLike()
     {
         MaterializedResult result = computeActual(format("SHOW CATALOGS LIKE '%s'", getSession().getCatalog().get()));
-        assertEquals(result.getOnlyColumnAsSet(), ImmutableSet.of(getSession().getCatalog().get()));
+        assertEquals(result.getOnlyColumnAsSet(), ImmutableSet.of(getSession().getCatalog().get().getLegacyName()));
     }
 
     @Test
     public void testShowSchemas()
     {
         MaterializedResult result = computeActual("SHOW SCHEMAS");
-        assertTrue(result.getOnlyColumnAsSet().containsAll(ImmutableSet.of(getSession().getSchema().get(), INFORMATION_SCHEMA)));
+        assertTrue(result.getOnlyColumnAsSet().containsAll(ImmutableSet.of(getSession().getSchema().get().getCaseNormalizedName(), INFORMATION_SCHEMA)));
     }
 
     @Test
@@ -3873,8 +3873,8 @@ public abstract class AbstractTestQueries
     {
         Set<String> expectedTables = ImmutableSet.copyOf(transform(TpchTable.getTables(), TpchTable::getTableName));
 
-        String catalog = getSession().getCatalog().get();
-        String schema = getSession().getSchema().get();
+        String catalog = getSession().getCatalog().get().getCaseNormalizedName();
+        String schema = getSession().getSchema().get().getCaseNormalizedName();
 
         MaterializedResult result = computeActual("SHOW TABLES FROM " + schema);
         assertTrue(result.getOnlyColumnAsSet().containsAll(expectedTables));
@@ -7051,7 +7051,7 @@ public abstract class AbstractTestQueries
 
         MaterializedResult actual = computeActual(session, "DESCRIBE OUTPUT my_query");
         MaterializedResult expected = resultBuilder(session, VARCHAR, VARCHAR, VARCHAR, VARCHAR, VARCHAR, BIGINT, BOOLEAN)
-                .row("Table", session.getCatalog().get(), "information_schema", "tables", "varchar", 0, true)
+                .row("Table", session.getCatalog().get().getCaseNormalizedName(), "information_schema", "tables", "varchar", 0, true)
                 .build();
         assertEqualsIgnoreOrder(actual, expected);
     }

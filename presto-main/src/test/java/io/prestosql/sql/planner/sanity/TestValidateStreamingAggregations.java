@@ -117,7 +117,7 @@ public class TestValidateStreamingAggregations
 
         getQueryRunner().inTransaction(session -> {
             // metadata.getCatalogHandle() registers the catalog for the transaction
-            session.getCatalog().ifPresent(catalog -> metadata.getCatalogHandle(session, catalog));
+            session.getCatalog().ifPresent(catalog -> metadata.getCatalogHandle(session, catalog.getLegacyName()));
             new ValidateStreamingAggregations().validate(planNode, session, metadata, sqlParser, types, WarningCollector.NOOP);
             return null;
         });

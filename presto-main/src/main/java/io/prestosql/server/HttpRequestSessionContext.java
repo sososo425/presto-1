@@ -19,12 +19,15 @@ import com.google.common.collect.ImmutableSet;
 import io.airlift.units.DataSize;
 import io.airlift.units.Duration;
 import io.prestosql.Session.ResourceEstimateBuilder;
+import io.prestosql.spi.connector.Name;
 import io.prestosql.spi.security.Identity;
 import io.prestosql.spi.security.SelectedRole;
 import io.prestosql.spi.session.ResourceEstimates;
 import io.prestosql.sql.parser.ParsingException;
 import io.prestosql.sql.parser.ParsingOptions;
 import io.prestosql.sql.parser.SqlParser;
+import io.prestosql.sql.tree.Expression;
+import io.prestosql.sql.tree.Identifier;
 import io.prestosql.transaction.TransactionId;
 
 import javax.servlet.http.HttpServletRequest;
@@ -45,6 +48,7 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Strings.emptyToNull;
 import static com.google.common.base.Strings.nullToEmpty;
 import static com.google.common.collect.ImmutableList.toImmutableList;
@@ -67,7 +71,6 @@ import static io.prestosql.client.PrestoHeaders.PRESTO_TIME_ZONE;
 import static io.prestosql.client.PrestoHeaders.PRESTO_TRACE_TOKEN;
 import static io.prestosql.client.PrestoHeaders.PRESTO_TRANSACTION_ID;
 import static io.prestosql.client.PrestoHeaders.PRESTO_USER;
-import static io.prestosql.spi.connector.Name.createNonDelimitedName;
 import static io.prestosql.sql.parser.ParsingOptions.DecimalLiteralTreatment.AS_DOUBLE;
 import static java.lang.String.format;
 
@@ -76,8 +79,8 @@ public final class HttpRequestSessionContext
 {
     private static final Splitter DOT_SPLITTER = Splitter.on('.');
 
-    private final String catalog;
-    private final String schema;
+    private final Name catalog;
+    private final Name schema;
     private final String path;
 
     private final Identity identity;
@@ -104,15 +107,15 @@ public final class HttpRequestSessionContext
     public HttpRequestSessionContext(HttpServletRequest servletRequest)
             throws WebApplicationException
     {
-        catalog = trimEmptyToNull(servletRequest.getHeader(PRESTO_CATALOG));
-        schema = trimEmptyToNull(servletRequest.getHeader(PRESTO_SCHEMA));
+        catalog = createName(trimEmptyToNull(servletRequest.getHeader(PRESTO_CATALOG)));
+        schema = createName(trimEmptyToNull(servletRequest.getHeader(PRESTO_SCHEMA)));
         path = trimEmptyToNull(servletRequest.getHeader(PRESTO_PATH));
         assertRequest((catalog != null) || (schema == null), "Schema is set but catalog is not");
 
         String user = trimEmptyToNull(servletRequest.getHeader(PRESTO_USER));
         assertRequest(user != null, "User must be set");
         identity = new Identity(
-                createNonDelimitedName(user),
+                createName(user),
                 Optional.ofNullable(servletRequest.getUserPrincipal()),
                 parseRoleHeaders(servletRequest),
                 parseExtraCredentials(servletRequest));
@@ -175,13 +178,13 @@ public final class HttpRequestSessionContext
     }
 
     @Override
-    public String getCatalog()
+    public Name getCatalog()
     {
         return catalog;
     }
 
     @Override
-    public String getSchema()
+    public Name getSchema()
     {
         return schema;
     }
@@ -441,5 +444,17 @@ public final class HttpRequestSessionContext
         catch (UnsupportedEncodingException e) {
             throw new AssertionError(e);
         }
+    }
+
+    private Name createName(String name)
+    {
+        if (name == null) {
+            return null;
+        }
+        SqlParser sqlParser = new SqlParser();
+        Expression expression = sqlParser.createExpression(name, new ParsingOptions());
+        checkArgument(expression instanceof Identifier, "Expression should be an instance of Identifier");
+        Identifier identifier = (Identifier) expression;
+        return new Name(identifier.getValue(), identifier.isDelimited());
     }
 }
