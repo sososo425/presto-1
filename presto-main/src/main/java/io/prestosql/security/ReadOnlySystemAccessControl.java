@@ -15,6 +15,7 @@ package io.prestosql.security;
 
 import io.prestosql.spi.connector.CatalogSchemaName;
 import io.prestosql.spi.connector.CatalogSchemaTableName;
+import io.prestosql.spi.connector.Name;
 import io.prestosql.spi.connector.SchemaTableName;
 import io.prestosql.spi.security.Identity;
 import io.prestosql.spi.security.SystemAccessControl;
@@ -54,7 +55,7 @@ public class ReadOnlySystemAccessControl
     }
 
     @Override
-    public void checkCanSetUser(Optional<Principal> principal, String userName)
+    public void checkCanSetUser(Optional<Principal> principal, Name userName)
     {
     }
 
@@ -64,45 +65,45 @@ public class ReadOnlySystemAccessControl
     }
 
     @Override
-    public void checkCanAccessCatalog(Identity identity, String catalogName)
+    public void checkCanAccessCatalog(Identity identity, Name catalogName)
     {
     }
 
     @Override
-    public void checkCanSelectFromColumns(Identity identity, CatalogSchemaTableName table, Set<String> columns)
+    public void checkCanSelectFromColumns(Identity identity, CatalogSchemaTableName table, Set<Name> columns)
     {
     }
 
     @Override
-    public void checkCanSetCatalogSessionProperty(Identity identity, String catalogName, String propertyName)
+    public void checkCanSetCatalogSessionProperty(Identity identity, Name catalogName, String propertyName)
     {
     }
 
     @Override
-    public void checkCanCreateViewWithSelectFromColumns(Identity identity, CatalogSchemaTableName table, Set<String> columns)
+    public void checkCanCreateViewWithSelectFromColumns(Identity identity, CatalogSchemaTableName table, Set<Name> columns)
     {
     }
 
     @Override
-    public Set<String> filterCatalogs(Identity identity, Set<String> catalogs)
+    public Set<Name> filterCatalogs(Identity identity, Set<Name> catalogs)
     {
         return catalogs;
     }
 
     @Override
-    public Set<String> filterSchemas(Identity identity, String catalogName, Set<String> schemaNames)
+    public Set<Name> filterSchemas(Identity identity, Name catalogName, Set<Name> schemaNames)
     {
         return schemaNames;
     }
 
     @Override
-    public Set<SchemaTableName> filterTables(Identity identity, String catalogName, Set<SchemaTableName> tableNames)
+    public Set<SchemaTableName> filterTables(Identity identity, Name catalogName, Set<SchemaTableName> tableNames)
     {
         return tableNames;
     }
 
     @Override
-    public void checkCanShowSchemas(Identity identity, String catalogName)
+    public void checkCanShowSchemas(Identity identity, Name catalogName)
     {
     }
 
@@ -112,7 +113,7 @@ public class ReadOnlySystemAccessControl
     }
 
     @Override
-    public void checkCanShowRoles(Identity identity, String catalogName)
+    public void checkCanShowRoles(Identity identity, Name catalogName)
     {
     }
 }

@@ -224,6 +224,11 @@ public interface ConnectorAccessControl
         denySelectColumns(tableName.toString(), columnNames);
     }
 
+    default void checkCanSelectFromOriginalColumns(ConnectorTransactionHandle transactionHandle, ConnectorIdentity identity, SchemaTableName tableName, Set<Name> columnNames)
+    {
+        checkCanSelectFromColumns(transactionHandle, identity, tableName, columnNames.stream().map(Name::getLegacyName).collect(Collectors.toSet()));
+    }
+
     /**
      * Check if identity is allowed to insert into the specified table in this catalog.
      *
@@ -272,6 +277,11 @@ public interface ConnectorAccessControl
     default void checkCanCreateViewWithSelectFromColumns(ConnectorTransactionHandle transactionHandle, ConnectorIdentity identity, SchemaTableName tableName, Set<String> columnNames)
     {
         denyCreateViewWithSelect(tableName.toString(), identity);
+    }
+
+    default void checkCanCreateViewWithSelectFromOriginalColumns(ConnectorTransactionHandle transactionHandle, ConnectorIdentity identity, SchemaTableName tableName, Set<Name> columnNames)
+    {
+        checkCanCreateViewWithSelectFromColumns(transactionHandle, identity, tableName, columnNames.stream().map(Name::getLegacyName).collect(Collectors.toSet()));
     }
 
     /**

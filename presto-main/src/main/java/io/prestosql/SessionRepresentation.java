@@ -61,7 +61,7 @@ public final class SessionRepresentation
     private final Map<String, String> systemProperties;
     private final Map<ConnectorId, Map<String, String>> catalogProperties;
     private final Map<String, Map<String, String>> unprocessedCatalogProperties;
-    private final Map<String, SelectedRole> roles;
+    private final Map<Name, SelectedRole> roles;
     private final Map<String, String> preparedStatements;
 
     @JsonCreator
@@ -88,7 +88,7 @@ public final class SessionRepresentation
             @JsonProperty("systemProperties") Map<String, String> systemProperties,
             @JsonProperty("catalogProperties") Map<ConnectorId, Map<String, String>> catalogProperties,
             @JsonProperty("unprocessedCatalogProperties") Map<String, Map<String, String>> unprocessedCatalogProperties,
-            @JsonProperty("roles") Map<String, SelectedRole> roles,
+            @JsonProperty("roles") Map<Name, SelectedRole> roles,
             @JsonProperty("preparedStatements") Map<String, String> preparedStatements)
     {
         this.queryId = requireNonNull(queryId, "queryId is null");
@@ -260,7 +260,7 @@ public final class SessionRepresentation
     }
 
     @JsonProperty
-    public Map<String, SelectedRole> getRoles()
+    public Map<Name, SelectedRole> getRoles()
     {
         return roles;
     }

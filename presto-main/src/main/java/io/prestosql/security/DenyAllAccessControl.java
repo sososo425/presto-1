@@ -16,6 +16,7 @@ package io.prestosql.security;
 import com.google.common.collect.ImmutableSet;
 import io.prestosql.metadata.QualifiedObjectName;
 import io.prestosql.spi.connector.CatalogSchemaName;
+import io.prestosql.spi.connector.Name;
 import io.prestosql.spi.connector.SchemaTableName;
 import io.prestosql.spi.security.Identity;
 import io.prestosql.spi.security.PrestoPrincipal;
@@ -25,6 +26,7 @@ import io.prestosql.transaction.TransactionId;
 import java.security.Principal;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static io.prestosql.spi.security.AccessDeniedException.denyAddColumn;
 import static io.prestosql.spi.security.AccessDeniedException.denyCatalogAccess;
@@ -62,21 +64,21 @@ public class DenyAllAccessControl
         implements AccessControl
 {
     @Override
-    public void checkCanSetUser(Optional<Principal> principal, String userName)
+    public void checkCanSetUser(Optional<Principal> principal, Name userName)
     {
-        denySetUser(principal, userName);
+        denySetUser(principal, userName.getCaseNormalizedName());
     }
 
     @Override
-    public Set<String> filterCatalogs(Identity identity, Set<String> catalogs)
+    public Set<Name> filterCatalogs(Identity identity, Set<Name> catalogs)
     {
         return ImmutableSet.of();
     }
 
     @Override
-    public void checkCanAccessCatalog(Identity identity, String catalogName)
+    public void checkCanAccessCatalog(Identity identity, Name catalogName)
     {
-        denyCatalogAccess(catalogName);
+        denyCatalogAccess(catalogName.getCaseNormalizedName());
     }
 
     @Override
@@ -92,9 +94,9 @@ public class DenyAllAccessControl
     }
 
     @Override
-    public void checkCanRenameSchema(TransactionId transactionId, Identity identity, CatalogSchemaName schemaName, String newSchemaName)
+    public void checkCanRenameSchema(TransactionId transactionId, Identity identity, CatalogSchemaName schemaName, Name newSchemaName)
     {
-        denyRenameSchema(schemaName.toString(), newSchemaName);
+        denyRenameSchema(schemaName.toString(), newSchemaName.getCaseNormalizedName());
     }
 
     @Override
@@ -122,19 +124,19 @@ public class DenyAllAccessControl
     }
 
     @Override
-    public Set<SchemaTableName> filterTables(TransactionId transactionId, Identity identity, String catalogName, Set<SchemaTableName> tableNames)
+    public Set<SchemaTableName> filterTables(TransactionId transactionId, Identity identity, Name catalogName, Set<SchemaTableName> tableNames)
     {
         return ImmutableSet.of();
     }
 
     @Override
-    public void checkCanShowSchemas(TransactionId transactionId, Identity identity, String catalogName)
+    public void checkCanShowSchemas(TransactionId transactionId, Identity identity, Name catalogName)
     {
         denyShowSchemas();
     }
 
     @Override
-    public Set<String> filterSchemas(TransactionId transactionId, Identity identity, String catalogName, Set<String> schemaNames)
+    public Set<Name> filterSchemas(TransactionId transactionId, Identity identity, Name catalogName, Set<Name> schemaNames)
     {
         return ImmutableSet.of();
     }
@@ -182,7 +184,7 @@ public class DenyAllAccessControl
     }
 
     @Override
-    public void checkCanCreateViewWithSelectFromColumns(TransactionId transactionId, Identity identity, QualifiedObjectName tableName, Set<String> columnNames)
+    public void checkCanCreateViewWithSelectFromColumns(TransactionId transactionId, Identity identity, QualifiedObjectName tableName, Set<Name> columnNames)
     {
         denyCreateViewWithSelect(tableName.toString(), identity);
     }
@@ -206,62 +208,62 @@ public class DenyAllAccessControl
     }
 
     @Override
-    public void checkCanSetCatalogSessionProperty(TransactionId transactionId, Identity identity, String catalogName, String propertyName)
+    public void checkCanSetCatalogSessionProperty(TransactionId transactionId, Identity identity, Name catalogName, String propertyName)
     {
-        denySetCatalogSessionProperty(catalogName, propertyName);
+        denySetCatalogSessionProperty(catalogName.getCaseNormalizedName(), propertyName);
     }
 
     @Override
-    public void checkCanSelectFromColumns(TransactionId transactionId, Identity identity, QualifiedObjectName tableName, Set<String> columnNames)
+    public void checkCanSelectFromColumns(TransactionId transactionId, Identity identity, QualifiedObjectName tableName, Set<Name> columnNames)
     {
-        denySelectColumns(tableName.toString(), columnNames);
+        denySelectColumns(tableName.toString(), columnNames.stream().map(Name::getLegacyName).collect(Collectors.toSet()));
     }
 
     @Override
-    public void checkCanCreateRole(TransactionId transactionId, Identity identity, String role, Optional<PrestoPrincipal> grantor, String catalogName)
+    public void checkCanCreateRole(TransactionId transactionId, Identity identity, Name role, Optional<PrestoPrincipal> grantor, Name catalogName)
     {
-        denyCreateRole(role);
+        denyCreateRole(role.getLegacyName());
     }
 
     @Override
-    public void checkCanDropRole(TransactionId transactionId, Identity identity, String role, String catalogName)
+    public void checkCanDropRole(TransactionId transactionId, Identity identity, Name role, Name catalogName)
     {
-        denyDropRole(role);
+        denyDropRole(role.getLegacyName());
     }
 
     @Override
-    public void checkCanGrantRoles(TransactionId transactionId, Identity identity, Set<String> roles, Set<PrestoPrincipal> grantees, boolean withAdminOption, Optional<PrestoPrincipal> grantor, String catalogName)
+    public void checkCanGrantRoles(TransactionId transactionId, Identity identity, Set<Name> roles, Set<PrestoPrincipal> grantees, boolean withAdminOption, Optional<PrestoPrincipal> grantor, Name catalogName)
     {
-        denyGrantRoles(roles, grantees);
+        denyGrantRoles(roles.stream().map(Name::getCaseNormalizedName).collect(Collectors.toSet()), grantees);
     }
 
     @Override
-    public void checkCanRevokeRoles(TransactionId transactionId, Identity identity, Set<String> roles, Set<PrestoPrincipal> grantees, boolean adminOptionFor, Optional<PrestoPrincipal> grantor, String catalogName)
+    public void checkCanRevokeRoles(TransactionId transactionId, Identity identity, Set<Name> roles, Set<PrestoPrincipal> grantees, boolean adminOptionFor, Optional<PrestoPrincipal> grantor, Name catalogName)
     {
-        denyRevokeRoles(roles, grantees);
+        denyRevokeRoles(roles.stream().map(Name::getCaseNormalizedName).collect(Collectors.toSet()), grantees);
     }
 
     @Override
-    public void checkCanSetRole(TransactionId requiredTransactionId, Identity identity, String role, String catalog)
+    public void checkCanSetRole(TransactionId requiredTransactionId, Identity identity, Name role, Name catalog)
     {
-        denySetRole(role);
+        denySetRole(role.getLegacyName());
     }
 
     @Override
-    public void checkCanShowRoles(TransactionId transactionId, Identity identity, String catalogName)
+    public void checkCanShowRoles(TransactionId transactionId, Identity identity, Name catalogName)
     {
-        denyShowRoles(catalogName);
+        denyShowRoles(catalogName.getCaseNormalizedName());
     }
 
     @Override
-    public void checkCanShowCurrentRoles(TransactionId transactionId, Identity identity, String catalogName)
+    public void checkCanShowCurrentRoles(TransactionId transactionId, Identity identity, Name catalogName)
     {
-        denyShowCurrentRoles(catalogName);
+        denyShowCurrentRoles(catalogName.getCaseNormalizedName());
     }
 
     @Override
-    public void checkCanShowRoleGrants(TransactionId transactionId, Identity identity, String catalogName)
+    public void checkCanShowRoleGrants(TransactionId transactionId, Identity identity, Name catalogName)
     {
-        denyShowRoleGrants(catalogName);
+        denyShowRoleGrants(catalogName.getCaseNormalizedName());
     }
 }

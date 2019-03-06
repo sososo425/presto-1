@@ -15,6 +15,7 @@ package io.prestosql.plugin.base.security;
 
 import io.prestosql.spi.connector.CatalogSchemaName;
 import io.prestosql.spi.connector.CatalogSchemaTableName;
+import io.prestosql.spi.connector.Name;
 import io.prestosql.spi.connector.SchemaTableName;
 import io.prestosql.spi.security.Identity;
 import io.prestosql.spi.security.PrestoPrincipal;
@@ -47,7 +48,7 @@ public abstract class ForwardingSystemAccessControl
     protected abstract SystemAccessControl delegate();
 
     @Override
-    public void checkCanSetUser(Optional<Principal> principal, String userName)
+    public void checkCanSetUser(Optional<Principal> principal, Name userName)
     {
         delegate().checkCanSetUser(principal, userName);
     }
@@ -59,13 +60,13 @@ public abstract class ForwardingSystemAccessControl
     }
 
     @Override
-    public void checkCanAccessCatalog(Identity identity, String catalogName)
+    public void checkCanAccessCatalog(Identity identity, Name catalogName)
     {
         delegate().checkCanAccessCatalog(identity, catalogName);
     }
 
     @Override
-    public Set<String> filterCatalogs(Identity identity, Set<String> catalogs)
+    public Set<Name> filterCatalogs(Identity identity, Set<Name> catalogs)
     {
         return delegate().filterCatalogs(identity, catalogs);
     }
@@ -83,19 +84,19 @@ public abstract class ForwardingSystemAccessControl
     }
 
     @Override
-    public void checkCanRenameSchema(Identity identity, CatalogSchemaName schema, String newSchemaName)
+    public void checkCanRenameSchema(Identity identity, CatalogSchemaName schema, Name newSchemaName)
     {
         delegate().checkCanRenameSchema(identity, schema, newSchemaName);
     }
 
     @Override
-    public void checkCanShowSchemas(Identity identity, String catalogName)
+    public void checkCanShowSchemas(Identity identity, Name catalogName)
     {
         delegate().checkCanShowSchemas(identity, catalogName);
     }
 
     @Override
-    public Set<String> filterSchemas(Identity identity, String catalogName, Set<String> schemaNames)
+    public Set<Name> filterSchemas(Identity identity, Name catalogName, Set<Name> schemaNames)
     {
         return delegate().filterSchemas(identity, catalogName, schemaNames);
     }
@@ -125,7 +126,7 @@ public abstract class ForwardingSystemAccessControl
     }
 
     @Override
-    public Set<SchemaTableName> filterTables(Identity identity, String catalogName, Set<SchemaTableName> tableNames)
+    public Set<SchemaTableName> filterTables(Identity identity, Name catalogName, Set<SchemaTableName> tableNames)
     {
         return delegate().filterTables(identity, catalogName, tableNames);
     }
@@ -149,7 +150,7 @@ public abstract class ForwardingSystemAccessControl
     }
 
     @Override
-    public void checkCanSelectFromColumns(Identity identity, CatalogSchemaTableName table, Set<String> columns)
+    public void checkCanSelectFromColumns(Identity identity, CatalogSchemaTableName table, Set<Name> columns)
     {
         delegate().checkCanSelectFromColumns(identity, table, columns);
     }
@@ -179,13 +180,13 @@ public abstract class ForwardingSystemAccessControl
     }
 
     @Override
-    public void checkCanCreateViewWithSelectFromColumns(Identity identity, CatalogSchemaTableName table, Set<String> columns)
+    public void checkCanCreateViewWithSelectFromColumns(Identity identity, CatalogSchemaTableName table, Set<Name> columns)
     {
         delegate().checkCanCreateViewWithSelectFromColumns(identity, table, columns);
     }
 
     @Override
-    public void checkCanSetCatalogSessionProperty(Identity identity, String catalogName, String propertyName)
+    public void checkCanSetCatalogSessionProperty(Identity identity, Name catalogName, String propertyName)
     {
         delegate().checkCanSetCatalogSessionProperty(identity, catalogName, propertyName);
     }
@@ -203,7 +204,7 @@ public abstract class ForwardingSystemAccessControl
     }
 
     @Override
-    public void checkCanShowRoles(Identity identity, String catalogName)
+    public void checkCanShowRoles(Identity identity, Name catalogName)
     {
         delegate().checkCanShowRoles(identity, catalogName);
     }

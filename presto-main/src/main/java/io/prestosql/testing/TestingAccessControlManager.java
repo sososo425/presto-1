@@ -18,6 +18,7 @@ import io.prestosql.metadata.QualifiedObjectName;
 import io.prestosql.security.AccessControlManager;
 import io.prestosql.security.AllowAllSystemAccessControl;
 import io.prestosql.spi.connector.CatalogSchemaName;
+import io.prestosql.spi.connector.Name;
 import io.prestosql.spi.security.Identity;
 import io.prestosql.transaction.TransactionId;
 import io.prestosql.transaction.TransactionManager;
@@ -30,8 +31,11 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
+import static io.prestosql.spi.connector.Name.createNonDelimitedName;
+import static io.prestosql.spi.connector.Name.equivalentNames;
 import static io.prestosql.spi.security.AccessDeniedException.denyAddColumn;
 import static io.prestosql.spi.security.AccessDeniedException.denyCreateSchema;
 import static io.prestosql.spi.security.AccessDeniedException.denyCreateTable;
@@ -83,12 +87,12 @@ public class TestingAccessControlManager
 
     public static TestingPrivilege privilege(String entityName, TestingPrivilegeType type)
     {
-        return new TestingPrivilege(Optional.empty(), entityName, type);
+        return new TestingPrivilege(Optional.empty(), createNonDelimitedName(entityName), type);
     }
 
     public static TestingPrivilege privilege(String userName, String entityName, TestingPrivilegeType type)
     {
-        return new TestingPrivilege(Optional.of(userName), entityName, type);
+        return new TestingPrivilege(Optional.of(createNonDelimitedName(userName)), createNonDelimitedName(entityName), type);
     }
 
     public void deny(TestingPrivilege... deniedPrivileges)
@@ -102,10 +106,10 @@ public class TestingAccessControlManager
     }
 
     @Override
-    public void checkCanSetUser(Optional<Principal> principal, String userName)
+    public void checkCanSetUser(Optional<Principal> principal, Name userName)
     {
-        if (shouldDenyPrivilege(userName, userName, SET_USER)) {
-            denySetUser(principal, userName);
+        if (shouldDenyPrivilege(userName.getLegacyName(), userName.getLegacyName(), SET_USER)) {
+            denySetUser(principal, userName.getCaseNormalizedName());
         }
         if (denyPrivileges.isEmpty()) {
             super.checkCanSetUser(principal, userName);
@@ -135,10 +139,10 @@ public class TestingAccessControlManager
     }
 
     @Override
-    public void checkCanRenameSchema(TransactionId transactionId, Identity identity, CatalogSchemaName schemaName, String newSchemaName)
+    public void checkCanRenameSchema(TransactionId transactionId, Identity identity, CatalogSchemaName schemaName, Name newSchemaName)
     {
         if (shouldDenyPrivilege(identity.getUser().getLegacyName(), schemaName.getSchemaName(), RENAME_SCHEMA)) {
-            denyRenameSchema(schemaName.toString(), newSchemaName);
+            denyRenameSchema(schemaName.toString(), newSchemaName.getCaseNormalizedName());
         }
         if (denyPrivileges.isEmpty()) {
             super.checkCanRenameSchema(transactionId, identity, schemaName, newSchemaName);
@@ -261,7 +265,7 @@ public class TestingAccessControlManager
     }
 
     @Override
-    public void checkCanCreateViewWithSelectFromColumns(TransactionId transactionId, Identity identity, QualifiedObjectName tableName, Set<String> columnNames)
+    public void checkCanCreateViewWithSelectFromColumns(TransactionId transactionId, Identity identity, QualifiedObjectName tableName, Set<Name> columnNames)
     {
         if (shouldDenyPrivilege(identity.getUser().getLegacyName(), tableName.getObjectName(), CREATE_VIEW_WITH_SELECT_COLUMNS)) {
             denyCreateViewWithSelect(tableName.toString(), identity);
@@ -272,10 +276,10 @@ public class TestingAccessControlManager
     }
 
     @Override
-    public void checkCanSetCatalogSessionProperty(TransactionId transactionId, Identity identity, String catalogName, String propertyName)
+    public void checkCanSetCatalogSessionProperty(TransactionId transactionId, Identity identity, Name catalogName, String propertyName)
     {
         if (shouldDenyPrivilege(identity.getUser().getLegacyName(), catalogName + "." + propertyName, SET_SESSION)) {
-            denySetCatalogSessionProperty(catalogName, propertyName);
+            denySetCatalogSessionProperty(catalogName.getCaseNormalizedName(), propertyName);
         }
         if (denyPrivileges.isEmpty()) {
             super.checkCanSetCatalogSessionProperty(transactionId, identity, catalogName, propertyName);
@@ -283,14 +287,14 @@ public class TestingAccessControlManager
     }
 
     @Override
-    public void checkCanSelectFromColumns(TransactionId transactionId, Identity identity, QualifiedObjectName tableName, Set<String> columns)
+    public void checkCanSelectFromColumns(TransactionId transactionId, Identity identity, QualifiedObjectName tableName, Set<Name> columns)
     {
         if (shouldDenyPrivilege(identity.getUser().getLegacyName(), tableName.getObjectName(), SELECT_COLUMN)) {
-            denySelectColumns(tableName.toString(), columns);
+            denySelectColumns(tableName.toString(), columns.stream().map(Name::getCaseNormalizedName).collect(Collectors.toSet()));
         }
-        for (String column : columns) {
-            if (shouldDenyPrivilege(identity.getUser().getLegacyName(), column, SELECT_COLUMN)) {
-                denySelectColumns(tableName.toString(), columns);
+        for (Name column : columns) {
+            if (shouldDenyPrivilege(identity.getUser().getLegacyName(), column.getLegacyName(), SELECT_COLUMN)) {
+                denySelectColumns(tableName.toString(), columns.stream().map(Name::getCaseNormalizedName).collect(Collectors.toSet()));
             }
         }
         if (denyPrivileges.isEmpty()) {
@@ -321,11 +325,11 @@ public class TestingAccessControlManager
 
     public static class TestingPrivilege
     {
-        private final Optional<String> userName;
-        private final String entityName;
+        private final Optional<Name> userName;
+        private final Name entityName;
         private final TestingPrivilegeType type;
 
-        private TestingPrivilege(Optional<String> userName, String entityName, TestingPrivilegeType type)
+        private TestingPrivilege(Optional<Name> userName, Name entityName, TestingPrivilegeType type)
         {
             this.userName = requireNonNull(userName, "userName is null");
             this.entityName = requireNonNull(entityName, "entityName is null");
@@ -334,8 +338,8 @@ public class TestingAccessControlManager
 
         public boolean matches(TestingPrivilege testPrivilege)
         {
-            return userName.map(name -> testPrivilege.userName.get().equals(name)).orElse(true) &&
-                    entityName.equals(testPrivilege.entityName) &&
+            return userName.map(name -> equivalentNames(name, testPrivilege.userName.get())).orElse(true) &&
+                    equivalentNames(entityName, testPrivilege.entityName) &&
                     type == testPrivilege.type;
         }
 

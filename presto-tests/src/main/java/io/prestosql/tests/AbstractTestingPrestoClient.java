@@ -156,10 +156,10 @@ public abstract class AbstractTestingPrestoClient<T>
                 properties.build(),
                 session.getPreparedStatements(),
                 session.getIdentity().getRoles().entrySet().stream()
-                        .collect(toImmutableMap(Entry::getKey, entry ->
+                        .collect(toImmutableMap(entry -> entry.getKey().getLegacyName(), entry ->
                                 new ClientSelectedRole(
                                         ClientSelectedRole.Type.valueOf(entry.getValue().getType().toString()),
-                                        entry.getValue().getRole()))),
+                                        entry.getValue().getRole().map(Name::getLegacyName)))),
                 session.getIdentity().getExtraCredentials(),
                 session.getTransactionId().map(Object::toString).orElse(null),
                 clientRequestTimeout);

@@ -20,6 +20,7 @@ import io.prestosql.execution.warnings.WarningCollector;
 import io.prestosql.metadata.FunctionRegistry;
 import io.prestosql.metadata.Metadata;
 import io.prestosql.security.AccessControl;
+import io.prestosql.spi.connector.Name;
 import io.prestosql.sql.parser.SqlParser;
 import io.prestosql.sql.rewrite.StatementRewrite;
 import io.prestosql.sql.tree.Expression;
@@ -29,6 +30,7 @@ import io.prestosql.sql.tree.Statement;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static io.prestosql.sql.analyzer.ExpressionTreeUtils.extractAggregateFunctions;
 import static io.prestosql.sql.analyzer.ExpressionTreeUtils.extractExpressions;
@@ -82,7 +84,7 @@ public class Analyzer
                                 session.getRequiredTransactionId(),
                                 accessControlInfo.getIdentity(),
                                 tableName,
-                                columns)));
+                                columns.stream().map(Name::createNonDelimitedName).collect(Collectors.toSet()))));
         return analysis;
     }
 

@@ -18,6 +18,7 @@ import io.prestosql.Session;
 import io.prestosql.metadata.Metadata;
 import io.prestosql.metadata.MetadataUtil;
 import io.prestosql.security.AccessControl;
+import io.prestosql.spi.connector.Name;
 import io.prestosql.spi.security.PrestoPrincipal;
 import io.prestosql.sql.analyzer.SemanticException;
 import io.prestosql.sql.tree.Expression;
@@ -26,14 +27,15 @@ import io.prestosql.transaction.TransactionManager;
 
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
 import static com.google.common.util.concurrent.Futures.immediateFuture;
 import static io.prestosql.metadata.MetadataUtil.createCatalogName;
 import static io.prestosql.metadata.MetadataUtil.createPrincipal;
+import static io.prestosql.spi.connector.Name.createNonDelimitedName;
 import static io.prestosql.spi.security.PrincipalType.ROLE;
 import static io.prestosql.sql.analyzer.SemanticErrorCode.MISSING_ROLE;
 
@@ -51,17 +53,17 @@ public class RevokeRolesTask
     {
         Session session = stateMachine.getSession();
 
-        Set<String> roles = statement.getRoles().stream().map(role -> role.getValue().toLowerCase(Locale.ENGLISH)).collect(toImmutableSet());
+        Set<Name> roles = statement.getRoles().stream().map(role -> new Name(role.getValue(), role.isDelimited())).collect(toImmutableSet());
         Set<PrestoPrincipal> grantees = statement.getGrantees().stream()
                 .map(MetadataUtil::createPrincipal)
                 .collect(toImmutableSet());
         boolean adminOptionFor = statement.isAdminOptionFor();
         Optional<PrestoPrincipal> grantor = statement.getGrantor().map(specification -> createPrincipal(session, specification));
-        String catalog = createCatalogName(session, statement);
+        Name catalog = createNonDelimitedName(createCatalogName(session, statement));
 
-        Set<String> availableRoles = metadata.listRoles(session, catalog);
+        Set<String> availableRoles = metadata.listRoles(session, catalog.getLegacyName());
         Set<String> specifiedRoles = new LinkedHashSet<>();
-        specifiedRoles.addAll(roles);
+        specifiedRoles.addAll(roles.stream().map(Name::getLegacyName).collect(toImmutableSet()));
         grantees.stream()
                 .filter(principal -> principal.getType() == ROLE)
                 .map(PrestoPrincipal::getName)
@@ -77,7 +79,7 @@ public class RevokeRolesTask
         }
 
         accessControl.checkCanRevokeRoles(session.getRequiredTransactionId(), session.getIdentity(), roles, grantees, adminOptionFor, grantor, catalog);
-        metadata.revokeRoles(session, roles, grantees, adminOptionFor, grantor, catalog);
+        metadata.revokeRoles(session, roles.stream().map(Name::getLegacyName).collect(Collectors.toSet()), grantees, adminOptionFor, grantor, catalog.getLegacyName());
 
         return immediateFuture(null);
     }

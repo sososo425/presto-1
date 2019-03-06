@@ -317,7 +317,7 @@ public final class Session
 
             for (Entry<String, String> property : catalogProperties.entrySet()) {
                 // verify permissions
-                accessControl.checkCanSetCatalogSessionProperty(transactionId, identity, catalogName, property.getKey());
+                accessControl.checkCanSetCatalogSessionProperty(transactionId, identity, createNonDelimitedName(catalogName), property.getKey());
 
                 // validate session property value
                 sessionPropertyManager.validateCatalogSessionProperty(connectorId, catalogName, property.getKey(), property.getValue());
@@ -325,26 +325,26 @@ public final class Session
             connectorProperties.put(connectorId, catalogProperties);
         }
 
-        ImmutableMap.Builder<String, SelectedRole> roles = ImmutableMap.builder();
-        for (Entry<String, SelectedRole> entry : identity.getRoles().entrySet()) {
-            String catalogName = entry.getKey();
+        ImmutableMap.Builder<Name, SelectedRole> roles = ImmutableMap.builder();
+        for (Entry<Name, SelectedRole> entry : identity.getRoles().entrySet()) {
+            Name catalogName = entry.getKey();
             SelectedRole role = entry.getValue();
-            ConnectorId connectorId = transactionManager.getOptionalCatalogMetadata(transactionId, catalogName)
+            ConnectorId connectorId = transactionManager.getOptionalCatalogMetadata(transactionId, catalogName.getLegacyName())
                     .orElseThrow(() -> new PrestoException(NOT_FOUND, "Catalog does not exist: " + catalogName))
                     .getConnectorId();
             if (role.getType() == SelectedRole.Type.ROLE) {
                 accessControl.checkCanSetRole(transactionId, identity, role.getRole().get(), catalogName);
             }
-            roles.put(connectorId.getCatalogName(), role);
+            roles.put(createNonDelimitedName(connectorId.getCatalogName()), role);
 
             String informationSchemaCatalogName = createInformationSchemaConnectorId(connectorId).getCatalogName();
             if (transactionManager.getCatalogNames(transactionId).containsKey(informationSchemaCatalogName)) {
-                roles.put(createInformationSchemaConnectorId(connectorId).getCatalogName(), role);
+                roles.put(createNonDelimitedName(createInformationSchemaConnectorId(connectorId).getCatalogName()), role);
             }
 
             String systemTablesCatalogName = createSystemTablesConnectorId(connectorId).getCatalogName();
             if (transactionManager.getCatalogNames(transactionId).containsKey(systemTablesCatalogName)) {
-                roles.put(createSystemTablesConnectorId(connectorId).getCatalogName(), role);
+                roles.put(createNonDelimitedName(createSystemTablesConnectorId(connectorId).getCatalogName()), role);
             }
         }
 
@@ -436,7 +436,7 @@ public final class Session
 
         return new FullConnectorSession(
                 this,
-                identity.toConnectorIdentity(connectorId.getCatalogName()),
+                identity.toConnectorIdentity(createNonDelimitedName(connectorId.getCatalogName())),
                 connectorProperties.getOrDefault(connectorId, ImmutableMap.of()),
                 connectorId,
                 connectorId.getCatalogName(),

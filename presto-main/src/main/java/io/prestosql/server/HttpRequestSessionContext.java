@@ -299,13 +299,13 @@ public final class HttpRequestSessionContext
         return parseProperty(servletRequest, PRESTO_SESSION);
     }
 
-    private static Map<String, SelectedRole> parseRoleHeaders(HttpServletRequest servletRequest)
+    private static Map<Name, SelectedRole> parseRoleHeaders(HttpServletRequest servletRequest)
     {
-        ImmutableMap.Builder<String, SelectedRole> roles = ImmutableMap.builder();
+        ImmutableMap.Builder<Name, SelectedRole> roles = ImmutableMap.builder();
         for (String header : splitSessionHeader(servletRequest.getHeaders(PRESTO_ROLE))) {
             List<String> nameValue = Splitter.on('=').limit(2).trimResults().splitToList(header);
             assertRequest(nameValue.size() == 2, "Invalid %s header", PRESTO_ROLE);
-            roles.put(nameValue.get(0), SelectedRole.valueOf(urlDecode(nameValue.get(1))));
+            roles.put(createNonDelimitedName(nameValue.get(0)), SelectedRole.valueOf(urlDecode(nameValue.get(1))));
         }
         return roles.build();
     }

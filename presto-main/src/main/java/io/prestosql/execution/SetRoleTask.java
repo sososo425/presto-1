@@ -27,7 +27,7 @@ import java.util.List;
 
 import static com.google.common.util.concurrent.Futures.immediateFuture;
 import static io.prestosql.metadata.MetadataUtil.createCatalogName;
-import static java.util.Locale.ENGLISH;
+import static io.prestosql.spi.connector.Name.createNonDelimitedName;
 
 public class SetRoleTask
         implements DataDefinitionTask<SetRole>
@@ -42,12 +42,12 @@ public class SetRoleTask
     public ListenableFuture<?> execute(SetRole statement, TransactionManager transactionManager, Metadata metadata, AccessControl accessControl, QueryStateMachine stateMachine, List<Expression> parameters)
     {
         Session session = stateMachine.getSession();
-        String catalog = createCatalogName(session, statement);
+        Name catalog = createNonDelimitedName(createCatalogName(session, statement));
         if (statement.getType() == SetRole.Type.ROLE) {
             accessControl.checkCanSetRole(
                     session.getRequiredTransactionId(),
                     session.getIdentity(),
-                    statement.getRole().map(c -> c.getValue().toLowerCase(ENGLISH)).get(),
+                    statement.getRole().map(c -> new Name(c.getValue(), c.isDelimited())).get(),
                     catalog);
         }
         SelectedRole.Type type;
@@ -64,7 +64,7 @@ public class SetRoleTask
             default:
                 throw new IllegalArgumentException("Unsupported type: " + statement.getType());
         }
-        stateMachine.addSetRole(catalog, new SelectedRole(type, statement.getRole().map(c -> new Name(c.getValue(), c.isDelimited()))));
+        stateMachine.addSetRole(catalog.getLegacyName(), new SelectedRole(type, statement.getRole().map(c -> new Name(c.getValue(), c.isDelimited()))));
         return immediateFuture(null);
     }
 }

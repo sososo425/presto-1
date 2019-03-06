@@ -15,6 +15,7 @@ package io.prestosql.security;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.prestosql.spi.connector.Name;
 
 import java.util.Optional;
 import java.util.regex.Matcher;
@@ -46,16 +47,16 @@ public class PrincipalUserMatchRule
         this.allow = allow;
     }
 
-    public Optional<Boolean> match(String principal, String user)
+    public Optional<Boolean> match(Name principal, Name user)
     {
-        Matcher matcher = principalRegex.matcher(principal);
+        Matcher matcher = principalRegex.matcher(principal.getCaseNormalizedName());
 
         if (!matcher.matches()) {
             return Optional.empty();
         }
 
         if (userRegex.isPresent()) {
-            if (userRegex.get().matcher(user).matches()) {
+            if (userRegex.get().matcher(user.getLegacyName()).matches()) {
                 return Optional.of(allow);
             }
         }

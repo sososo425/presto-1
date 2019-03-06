@@ -14,7 +14,6 @@
 package io.prestosql.spi.security;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import io.prestosql.spi.connector.Name;
 
 import java.util.Objects;
@@ -37,7 +36,7 @@ public class SelectedRole
     private final Optional<Name> role;
 
     @JsonCreator
-    public SelectedRole(@JsonProperty("type") Type type, @JsonProperty("role") Optional<Name> role)
+    public SelectedRole(Type type, Optional<Name> role)
     {
         this.type = requireNonNull(type, "type is null");
         this.role = requireNonNull(role, "role is null");
@@ -46,21 +45,14 @@ public class SelectedRole
         }
     }
 
-    @JsonProperty("type")
     public Type getType()
     {
         return type;
     }
 
-    @JsonProperty("role")
-    public Optional<Name> getRoleName()
+    public Optional<Name> getRole()
     {
         return role;
-    }
-
-    public Optional<String> getRole()
-    {
-        return role.map(Name::getLegacyName);
     }
 
     @Override
