@@ -61,7 +61,7 @@ public class InternalTable
         ImmutableList.Builder<String> names = ImmutableList.builder();
         ImmutableList.Builder<Type> types = ImmutableList.builder();
         for (ColumnMetadata column : columns) {
-            names.add(column.getName());
+            names.add(column.getName().getLegacyName());
             types.add(column.getType());
         }
         return new Builder(names.build(), types.build());

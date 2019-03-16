@@ -297,7 +297,7 @@ public class TpchMetadata
     {
         ImmutableMap.Builder<String, ColumnHandle> builder = ImmutableMap.builder();
         for (ColumnMetadata columnMetadata : getTableMetadata(session, tableHandle).getColumns()) {
-            builder.put(columnMetadata.getName(), new TpchColumnHandle(columnMetadata.getName(), columnMetadata.getType()));
+            builder.put(columnMetadata.getName().getLegacyName(), new TpchColumnHandle(columnMetadata.getName().getLegacyName(), columnMetadata.getType()));
         }
         return builder.build();
     }

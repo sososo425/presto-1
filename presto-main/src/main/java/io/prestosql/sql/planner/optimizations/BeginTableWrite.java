@@ -23,6 +23,7 @@ import io.prestosql.metadata.TableHandle;
 import io.prestosql.metadata.TableLayoutResult;
 import io.prestosql.spi.connector.ColumnHandle;
 import io.prestosql.spi.connector.Constraint;
+import io.prestosql.spi.connector.Name;
 import io.prestosql.spi.predicate.TupleDomain;
 import io.prestosql.sql.planner.PlanNodeIdAllocator;
 import io.prestosql.sql.planner.SymbolAllocator;
@@ -48,6 +49,7 @@ import java.util.Set;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Verify.verify;
 import static io.prestosql.metadata.TableLayoutResult.computeEnforced;
+import static io.prestosql.spi.connector.Name.createNonDelimitedName;
 import static io.prestosql.sql.planner.optimizations.QueryCardinalityUtil.isAtMostScalar;
 import static io.prestosql.sql.planner.plan.ChildReplacer.replaceChildren;
 import static java.util.stream.Collectors.toSet;
@@ -178,7 +180,7 @@ public class BeginTableWrite
             // TODO: we shouldn't need to store the schemaTableName in the handles, but there isn't a good way to pass this around with the current architecture
             if (target instanceof TableWriterNode.CreateName) {
                 TableWriterNode.CreateName create = (TableWriterNode.CreateName) target;
-                return new TableWriterNode.CreateHandle(metadata.beginCreateTable(session, create.getCatalog(), create.getTableMetadata(), create.getLayout()), create.getTableMetadata().getTable());
+                return new TableWriterNode.CreateHandle(metadata.beginCreateTable(session, createNonDelimitedName(create.getCatalog()), create.getTableMetadata(), create.getLayout()), create.getTableMetadata().getTable());
             }
             if (target instanceof TableWriterNode.InsertReference) {
                 TableWriterNode.InsertReference insert = (TableWriterNode.InsertReference) target;

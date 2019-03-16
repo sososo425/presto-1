@@ -37,6 +37,7 @@ import io.prestosql.spi.PrestoException;
 import io.prestosql.spi.connector.ColumnHandle;
 import io.prestosql.spi.connector.ConnectorPageSource;
 import io.prestosql.spi.connector.Constraint;
+import io.prestosql.spi.connector.Name;
 import io.prestosql.spi.type.ArrayType;
 import io.prestosql.spi.type.Type;
 import io.prestosql.spi.type.TypeSignature;
@@ -457,10 +458,10 @@ public class ExtractSpatialJoins
 
     private static KdbTree loadKdbTree(String tableName, Session session, Metadata metadata, SplitManager splitManager, PageSourceManager pageSourceManager)
     {
-        QualifiedObjectName name = toQualifiedObjectName(tableName, session.getCatalog().get().getLegacyName(), session.getSchema().get().getLegacyName());
+        QualifiedObjectName name = toQualifiedObjectName(tableName, session.getCatalog().get(), session.getSchema().get());
         TableHandle tableHandle = metadata.getTableHandle(session, name)
                 .orElseThrow(() -> new PrestoException(INVALID_SPATIAL_PARTITIONING, format("Table not found: %s", name)));
-        Map<String, ColumnHandle> columnHandles = metadata.getColumnHandles(session, tableHandle);
+        Map<Name, ColumnHandle> columnHandles = metadata.getColumnHandles(session, tableHandle);
         List<ColumnHandle> visibleColumnHandles = columnHandles.values().stream()
                 .filter(handle -> !metadata.getColumnMetadata(session, tableHandle, handle).isHidden())
                 .collect(toImmutableList());
@@ -518,9 +519,9 @@ public class ExtractSpatialJoins
         }
     }
 
-    private static QualifiedObjectName toQualifiedObjectName(String name, String catalog, String schema)
+    private static QualifiedObjectName toQualifiedObjectName(String name, Name catalog, Name schema)
     {
-        ImmutableList<String> ids = ImmutableList.copyOf(Splitter.on('.').split(name));
+        ImmutableList<Name> ids = ImmutableList.copyOf(Splitter.on('.').split(name)).stream().map(Name::createNonDelimitedName).collect(toImmutableList());
         if (ids.size() == 3) {
             return new QualifiedObjectName(ids.get(0), ids.get(1), ids.get(2));
         }

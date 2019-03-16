@@ -19,6 +19,7 @@ import io.prestosql.execution.warnings.WarningCollector;
 import io.prestosql.metadata.Metadata;
 import io.prestosql.metadata.QualifiedObjectName;
 import io.prestosql.spi.Plugin;
+import io.prestosql.spi.connector.Name;
 import io.prestosql.split.PageSourceManager;
 import io.prestosql.split.SplitManager;
 import io.prestosql.sql.planner.NodePartitioningManager;
@@ -69,13 +70,13 @@ public interface QueryRunner
         throw new UnsupportedOperationException();
     }
 
-    List<QualifiedObjectName> listTables(Session session, String catalog, String schema);
+    List<QualifiedObjectName> listTables(Session session, Name catalog, Name schema);
 
-    boolean tableExists(Session session, String table);
+    boolean tableExists(Session session, Name table);
 
     void installPlugin(Plugin plugin);
 
-    void createCatalog(String catalogName, String connectorName, Map<String, String> properties);
+    void createCatalog(Name catalogName, Name connectorName, Map<String, String> properties);
 
     Lock getExclusiveLock();
 

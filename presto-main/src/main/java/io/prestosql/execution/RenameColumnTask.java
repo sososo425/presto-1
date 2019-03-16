@@ -20,6 +20,7 @@ import io.prestosql.metadata.QualifiedObjectName;
 import io.prestosql.metadata.TableHandle;
 import io.prestosql.security.AccessControl;
 import io.prestosql.spi.connector.ColumnHandle;
+import io.prestosql.spi.connector.Name;
 import io.prestosql.sql.analyzer.SemanticException;
 import io.prestosql.sql.tree.Expression;
 import io.prestosql.sql.tree.RenameColumn;
@@ -34,7 +35,6 @@ import static io.prestosql.sql.analyzer.SemanticErrorCode.COLUMN_ALREADY_EXISTS;
 import static io.prestosql.sql.analyzer.SemanticErrorCode.MISSING_COLUMN;
 import static io.prestosql.sql.analyzer.SemanticErrorCode.MISSING_TABLE;
 import static io.prestosql.sql.analyzer.SemanticErrorCode.NOT_SUPPORTED;
-import static java.util.Locale.ENGLISH;
 
 public class RenameColumnTask
         implements DataDefinitionTask<RenameColumn>
@@ -53,12 +53,12 @@ public class RenameColumnTask
         TableHandle tableHandle = metadata.getTableHandle(session, tableName)
                 .orElseThrow(() -> new SemanticException(MISSING_TABLE, statement, "Table '%s' does not exist", tableName));
 
-        String source = statement.getSource().getValue().toLowerCase(ENGLISH);
-        String target = statement.getTarget().getValue().toLowerCase(ENGLISH);
+        Name source = new Name(statement.getSource().getValue(), statement.getSource().isDelimited());
+        Name target = new Name(statement.getTarget().getValue(), statement.getSource().isDelimited());
 
         accessControl.checkCanRenameColumn(session.getRequiredTransactionId(), session.getIdentity(), tableName);
 
-        Map<String, ColumnHandle> columnHandles = metadata.getColumnHandles(session, tableHandle);
+        Map<Name, ColumnHandle> columnHandles = metadata.getColumnHandles(session, tableHandle);
         ColumnHandle columnHandle = columnHandles.get(source);
         if (columnHandle == null) {
             throw new SemanticException(MISSING_COLUMN, statement, "Column '%s' does not exist", source);

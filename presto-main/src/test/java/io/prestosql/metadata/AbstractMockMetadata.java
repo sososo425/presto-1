@@ -23,6 +23,7 @@ import io.prestosql.spi.connector.ColumnMetadata;
 import io.prestosql.spi.connector.ConnectorOutputMetadata;
 import io.prestosql.spi.connector.ConnectorTableMetadata;
 import io.prestosql.spi.connector.Constraint;
+import io.prestosql.spi.connector.Name;
 import io.prestosql.spi.connector.SystemTable;
 import io.prestosql.spi.predicate.TupleDomain;
 import io.prestosql.spi.security.GrantInfo;
@@ -90,7 +91,7 @@ public abstract class AbstractMockMetadata
     }
 
     @Override
-    public List<String> listSchemaNames(Session session, String catalogName)
+    public List<Name> listSchemaNames(Session session, Name catalogName)
     {
         throw new UnsupportedOperationException();
     }
@@ -162,7 +163,7 @@ public abstract class AbstractMockMetadata
     }
 
     @Override
-    public Map<String, ColumnHandle> getColumnHandles(Session session, TableHandle tableHandle)
+    public Map<Name, ColumnHandle> getColumnHandles(Session session, TableHandle tableHandle)
     {
         throw new UnsupportedOperationException();
     }
@@ -192,13 +193,13 @@ public abstract class AbstractMockMetadata
     }
 
     @Override
-    public void renameSchema(Session session, CatalogSchemaName source, String target)
+    public void renameSchema(Session session, CatalogSchemaName source, Name target)
     {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void createTable(Session session, String catalogName, ConnectorTableMetadata tableMetadata, boolean ignoreExisting)
+    public void createTable(Session session, Name catalogName, ConnectorTableMetadata tableMetadata, boolean ignoreExisting)
     {
         throw new UnsupportedOperationException();
     }
@@ -210,7 +211,7 @@ public abstract class AbstractMockMetadata
     }
 
     @Override
-    public void renameColumn(Session session, TableHandle tableHandle, ColumnHandle source, String target)
+    public void renameColumn(Session session, TableHandle tableHandle, ColumnHandle source, Name target)
     {
         throw new UnsupportedOperationException();
     }
@@ -228,13 +229,13 @@ public abstract class AbstractMockMetadata
     }
 
     @Override
-    public Optional<NewTableLayout> getNewTableLayout(Session session, String catalogName, ConnectorTableMetadata tableMetadata)
+    public Optional<NewTableLayout> getNewTableLayout(Session session, Name catalogName, ConnectorTableMetadata tableMetadata)
     {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public OutputTableHandle beginCreateTable(Session session, String catalogName, ConnectorTableMetadata tableMetadata, Optional<NewTableLayout> layout)
+    public OutputTableHandle beginCreateTable(Session session, Name catalogName, ConnectorTableMetadata tableMetadata, Optional<NewTableLayout> layout)
     {
         throw new UnsupportedOperationException();
     }
@@ -252,13 +253,13 @@ public abstract class AbstractMockMetadata
     }
 
     @Override
-    public TableStatisticsMetadata getStatisticsCollectionMetadataForWrite(Session session, String catalogName, ConnectorTableMetadata tableMetadata)
+    public TableStatisticsMetadata getStatisticsCollectionMetadataForWrite(Session session, Name catalogName, ConnectorTableMetadata tableMetadata)
     {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public TableStatisticsMetadata getStatisticsCollectionMetadata(Session session, String catalogName, ConnectorTableMetadata tableMetadata)
+    public TableStatisticsMetadata getStatisticsCollectionMetadata(Session session, Name catalogName, ConnectorTableMetadata tableMetadata)
     {
         throw new UnsupportedOperationException();
     }
@@ -330,13 +331,13 @@ public abstract class AbstractMockMetadata
     }
 
     @Override
-    public Optional<ConnectorId> getCatalogHandle(Session session, String catalogName)
+    public Optional<ConnectorId> getCatalogHandle(Session session, Name catalogName)
     {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public Map<String, ConnectorId> getCatalogNames(Session session)
+    public Map<Name, ConnectorId> getCatalogNames(Session session)
     {
         throw new UnsupportedOperationException();
     }
@@ -378,49 +379,49 @@ public abstract class AbstractMockMetadata
     }
 
     @Override
-    public void createRole(Session session, String role, Optional<PrestoPrincipal> grantor, String catalog)
+    public void createRole(Session session, Name role, Optional<PrestoPrincipal> grantor, Name catalog)
     {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void dropRole(Session session, String role, String catalog)
+    public void dropRole(Session session, Name role, Name catalog)
     {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public Set<String> listRoles(Session session, String catalog)
+    public Set<Name> listRoles(Session session, Name catalog)
     {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void grantRoles(Session session, Set<String> roles, Set<PrestoPrincipal> grantees, boolean withAdminOption, Optional<PrestoPrincipal> grantor, String catalog)
+    public void grantRoles(Session session, Set<Name> roles, Set<PrestoPrincipal> grantees, boolean withAdminOption, Optional<PrestoPrincipal> grantor, Name catalog)
     {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void revokeRoles(Session session, Set<String> roles, Set<PrestoPrincipal> grantees, boolean adminOptionFor, Optional<PrestoPrincipal> grantor, String catalog)
+    public void revokeRoles(Session session, Set<Name> roles, Set<PrestoPrincipal> grantees, boolean adminOptionFor, Optional<PrestoPrincipal> grantor, Name catalog)
     {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public Set<RoleGrant> listApplicableRoles(Session session, PrestoPrincipal principal, String catalog)
+    public Set<RoleGrant> listApplicableRoles(Session session, PrestoPrincipal principal, Name catalog)
     {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public Set<String> listEnabledRoles(Session session, String catalog)
+    public Set<Name> listEnabledRoles(Session session, Name catalog)
     {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public Set<RoleGrant> listRoleGrants(Session session, String catalog, PrestoPrincipal principal)
+    public Set<RoleGrant> listRoleGrants(Session session, Name catalog, PrestoPrincipal principal)
     {
         throw new UnsupportedOperationException();
     }
@@ -504,7 +505,7 @@ public abstract class AbstractMockMetadata
     }
 
     @Override
-    public boolean catalogExists(Session session, String catalogName)
+    public boolean catalogExists(Session session, Name catalogName)
     {
         throw new UnsupportedOperationException();
     }

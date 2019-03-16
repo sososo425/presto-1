@@ -65,7 +65,7 @@ public class SetSessionTask
                     .orElseThrow(() -> new SemanticException(INVALID_SESSION_PROPERTY, statement, "Session property %s does not exist", statement.getName()));
         }
         else {
-            ConnectorId connectorId = metadata.getCatalogHandle(stateMachine.getSession(), parts.get(0))
+            ConnectorId connectorId = metadata.getCatalogHandle(stateMachine.getSession(), createNonDelimitedName(parts.get(0)))
                     .orElseThrow(() -> new SemanticException(MISSING_CATALOG, statement, "Catalog %s does not exist", parts.get(0)));
             accessControl.checkCanSetCatalogSessionProperty(session.getRequiredTransactionId(), session.getIdentity(), createNonDelimitedName(parts.get(0)), parts.get(1));
             propertyMetadata = metadata.getSessionPropertyManager().getConnectorSessionPropertyMetadata(connectorId, parts.get(1))

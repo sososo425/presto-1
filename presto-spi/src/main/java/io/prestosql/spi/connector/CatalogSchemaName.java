@@ -35,24 +35,14 @@ public final class CatalogSchemaName
         this.schemaName = requireNonNull(schemaName, "SchemaName is null");
     }
 
-    public Name getOriginalCatalogName()
+    public Name getCatalogName()
     {
         return catalogName;
     }
 
-    public Name getOriginalSchemaName()
+    public Name getSchemaName()
     {
         return schemaName;
-    }
-
-    public String getCatalogName()
-    {
-        return catalogName.getLegacyName();
-    }
-
-    public String getSchemaName()
-    {
-        return schemaName.getLegacyName();
     }
 
     @Override

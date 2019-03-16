@@ -28,7 +28,6 @@ import java.util.Set;
 
 import static com.google.common.util.concurrent.Futures.immediateFuture;
 import static io.prestosql.metadata.MetadataUtil.createCatalogName;
-import static io.prestosql.spi.connector.Name.createNonDelimitedName;
 import static io.prestosql.sql.analyzer.SemanticErrorCode.MISSING_ROLE;
 
 public class DropRoleTask
@@ -44,14 +43,14 @@ public class DropRoleTask
     public ListenableFuture<?> execute(DropRole statement, TransactionManager transactionManager, Metadata metadata, AccessControl accessControl, QueryStateMachine stateMachine, List<Expression> parameters)
     {
         Session session = stateMachine.getSession();
-        Name catalog = createNonDelimitedName(createCatalogName(session, statement));
+        Name catalog = createCatalogName(session, statement);
         Name role = new Name(statement.getName().getValue(), statement.getName().isDelimited());
         accessControl.checkCanDropRole(session.getRequiredTransactionId(), session.getIdentity(), role, catalog);
-        Set<String> existingRoles = metadata.listRoles(session, catalog.getLegacyName());
-        if (!existingRoles.contains(role.getLegacyName())) {
+        Set<Name> existingRoles = metadata.listRoles(session, catalog);
+        if (!existingRoles.contains(role)) {
             throw new SemanticException(MISSING_ROLE, statement, "Role '%s' does not exist", role);
         }
-        metadata.dropRole(session, role.getLegacyName(), catalog.getLegacyName());
+        metadata.dropRole(session, role, catalog);
         return immediateFuture(null);
     }
 }

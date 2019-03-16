@@ -27,6 +27,7 @@ import io.prestosql.spi.security.PrestoPrincipal;
 import io.prestosql.spi.type.Type;
 import io.prestosql.sql.analyzer.SemanticException;
 import io.prestosql.sql.tree.GrantorSpecification;
+import io.prestosql.sql.tree.Identifier;
 import io.prestosql.sql.tree.Node;
 import io.prestosql.sql.tree.PrincipalSpecification;
 import io.prestosql.sql.tree.QualifiedName;
@@ -99,9 +100,9 @@ public final class MetadataUtil
         return null;
     }
 
-    public static String createCatalogName(Session session, Node node)
+    public static Name createCatalogName(Session session, Node node)
     {
-        Optional<String> sessionCatalog = session.getCatalog().map(Name::getLegacyName);
+        Optional<Name> sessionCatalog = session.getCatalog();
 
         if (!sessionCatalog.isPresent()) {
             throw new SemanticException(CATALOG_NOT_SPECIFIED, node, "Session catalog must be set");
@@ -144,11 +145,11 @@ public final class MetadataUtil
             throw new PrestoException(SYNTAX_ERROR, format("Too many dots in table name: %s", name));
         }
 
-        List<String> parts = Lists.reverse(name.getParts());
-        String objectName = parts.get(0);
-        String schemaName = (parts.size() > 1) ? parts.get(1) : session.getSchema().map(Name::getLegacyName).orElseThrow(() ->
+        List<Identifier> parts = Lists.reverse(name.getOriginalParts());
+        Name objectName = createName(parts.get(0));
+        Name schemaName = (parts.size() > 1) ? createName(parts.get(1)) : session.getSchema().orElseThrow(() ->
                 new SemanticException(SCHEMA_NOT_SPECIFIED, node, "Schema must be specified when session schema is not set"));
-        String catalogName = (parts.size() > 2) ? parts.get(2) : session.getCatalog().map(Name::getLegacyName).orElseThrow(() ->
+        Name catalogName = (parts.size() > 2) ? createName(parts.get(2)) : session.getCatalog().orElseThrow(() ->
                 new SemanticException(CATALOG_NOT_SPECIFIED, node, "Catalog must be specified when session catalog is not set"));
 
         return new QualifiedObjectName(catalogName, schemaName, objectName);
@@ -184,12 +185,12 @@ public final class MetadataUtil
         }
     }
 
-    public static boolean tableExists(Metadata metadata, Session session, String table)
+    public static boolean tableExists(Metadata metadata, Session session, Name table)
     {
         if (!session.getCatalog().isPresent() || !session.getSchema().isPresent()) {
             return false;
         }
-        QualifiedObjectName name = new QualifiedObjectName(session.getCatalog().get().getLegacyName(), session.getSchema().get().getLegacyName(), table);
+        QualifiedObjectName name = new QualifiedObjectName(session.getCatalog().get(), session.getSchema().get(), table);
         return metadata.getTableHandle(session, name).isPresent();
     }
 
@@ -212,6 +213,11 @@ public final class MetadataUtil
         {
             return tables.build();
         }
+    }
+
+    private static Name createName(Identifier identifier)
+    {
+        return new Name(identifier.getValue(), identifier.isDelimited());
     }
 
     public static class TableMetadataBuilder

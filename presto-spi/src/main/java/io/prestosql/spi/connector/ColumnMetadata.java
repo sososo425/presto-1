@@ -67,9 +67,9 @@ public class ColumnMetadata
         this.properties = properties.isEmpty() ? emptyMap() : unmodifiableMap(new LinkedHashMap<>(properties));
     }
 
-    public String getName()
+    public Name getName()
     {
-        return name.getLegacyName();
+        return name;
     }
 
     public Name getOriginalName()

@@ -29,13 +29,11 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
 import static com.google.common.util.concurrent.Futures.immediateFuture;
 import static io.prestosql.metadata.MetadataUtil.createCatalogName;
 import static io.prestosql.metadata.MetadataUtil.createPrincipal;
-import static io.prestosql.spi.connector.Name.createNonDelimitedName;
 import static io.prestosql.spi.security.PrincipalType.ROLE;
 import static io.prestosql.sql.analyzer.SemanticErrorCode.MISSING_ROLE;
 
@@ -59,27 +57,27 @@ public class RevokeRolesTask
                 .collect(toImmutableSet());
         boolean adminOptionFor = statement.isAdminOptionFor();
         Optional<PrestoPrincipal> grantor = statement.getGrantor().map(specification -> createPrincipal(session, specification));
-        Name catalog = createNonDelimitedName(createCatalogName(session, statement));
+        Name catalog = createCatalogName(session, statement);
 
-        Set<String> availableRoles = metadata.listRoles(session, catalog.getLegacyName());
-        Set<String> specifiedRoles = new LinkedHashSet<>();
-        specifiedRoles.addAll(roles.stream().map(Name::getLegacyName).collect(toImmutableSet()));
+        Set<Name> availableRoles = metadata.listRoles(session, catalog);
+        Set<Name> specifiedRoles = new LinkedHashSet<>();
+        specifiedRoles.addAll(roles);
         grantees.stream()
                 .filter(principal -> principal.getType() == ROLE)
-                .map(PrestoPrincipal::getName)
+                .map(PrestoPrincipal::getOriginalName)
                 .forEach(specifiedRoles::add);
         if (grantor.isPresent() && grantor.get().getType() == ROLE) {
-            specifiedRoles.add(grantor.get().getName());
+            specifiedRoles.add(grantor.get().getOriginalName());
         }
 
-        for (String role : specifiedRoles) {
+        for (Name role : specifiedRoles) {
             if (!availableRoles.contains(role)) {
                 throw new SemanticException(MISSING_ROLE, statement, "Role '%s' does not exist", role);
             }
         }
 
         accessControl.checkCanRevokeRoles(session.getRequiredTransactionId(), session.getIdentity(), roles, grantees, adminOptionFor, grantor, catalog);
-        metadata.revokeRoles(session, roles.stream().map(Name::getLegacyName).collect(Collectors.toSet()), grantees, adminOptionFor, grantor, catalog.getLegacyName());
+        metadata.revokeRoles(session, roles, grantees, adminOptionFor, grantor, catalog);
 
         return immediateFuture(null);
     }

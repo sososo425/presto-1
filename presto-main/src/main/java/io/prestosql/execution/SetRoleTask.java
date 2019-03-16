@@ -27,7 +27,6 @@ import java.util.List;
 
 import static com.google.common.util.concurrent.Futures.immediateFuture;
 import static io.prestosql.metadata.MetadataUtil.createCatalogName;
-import static io.prestosql.spi.connector.Name.createNonDelimitedName;
 
 public class SetRoleTask
         implements DataDefinitionTask<SetRole>
@@ -42,7 +41,7 @@ public class SetRoleTask
     public ListenableFuture<?> execute(SetRole statement, TransactionManager transactionManager, Metadata metadata, AccessControl accessControl, QueryStateMachine stateMachine, List<Expression> parameters)
     {
         Session session = stateMachine.getSession();
-        Name catalog = createNonDelimitedName(createCatalogName(session, statement));
+        Name catalog = createCatalogName(session, statement);
         if (statement.getType() == SetRole.Type.ROLE) {
             accessControl.checkCanSetRole(
                     session.getRequiredTransactionId(),

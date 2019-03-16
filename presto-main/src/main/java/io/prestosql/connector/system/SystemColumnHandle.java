@@ -83,7 +83,7 @@ public class SystemColumnHandle
     {
         ImmutableMap.Builder<String, ColumnHandle> columnHandles = ImmutableMap.builder();
         for (ColumnMetadata columnMetadata : tableMetadata.getColumns()) {
-            columnHandles.put(columnMetadata.getName(), new SystemColumnHandle(connectorId, columnMetadata.getName()));
+            columnHandles.put(columnMetadata.getName().getLegacyName(), new SystemColumnHandle(connectorId, columnMetadata.getName().getLegacyName()));
         }
 
         return columnHandles.build();

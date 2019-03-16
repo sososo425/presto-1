@@ -24,6 +24,7 @@ import io.prestosql.security.AccessControl;
 import io.prestosql.spi.connector.ColumnHandle;
 import io.prestosql.spi.connector.ColumnMetadata;
 import io.prestosql.spi.connector.Constraint;
+import io.prestosql.spi.connector.Name;
 import io.prestosql.spi.statistics.ColumnStatistics;
 import io.prestosql.spi.statistics.DoubleRange;
 import io.prestosql.spi.statistics.Estimate;
@@ -169,7 +170,7 @@ public class ShowStatsRewrite
             List<String> statsColumnNames = buildColumnsNames();
             List<SelectItem> selectItems = buildSelectItems(statsColumnNames);
             TableMetadata tableMetadata = metadata.getTableMetadata(session, tableHandle);
-            Map<String, ColumnHandle> columnHandles = metadata.getColumnHandles(session, tableHandle);
+            Map<Name, ColumnHandle> columnHandles = metadata.getColumnHandles(session, tableHandle);
             List<Expression> resultRows = buildStatisticsRows(tableMetadata, columnHandles, tableStatistics);
 
             return simpleQuery(selectAll(selectItems),
@@ -238,7 +239,7 @@ public class ShowStatsRewrite
                 if (columnMetadata.isHidden()) {
                     continue;
                 }
-                String columnName = columnMetadata.getName();
+                String columnName = columnMetadata.getName().getLegacyName();
                 Type columnType = columnMetadata.getType();
                 ColumnHandle columnHandle = columnHandles.get(columnName);
                 ColumnStatistics columnStatistics = tableStatistics.getColumnStatistics().get(columnHandle);

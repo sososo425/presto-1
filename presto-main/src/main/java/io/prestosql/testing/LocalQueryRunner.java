@@ -550,7 +550,7 @@ public class LocalQueryRunner
     }
 
     @Override
-    public void createCatalog(String catalogName, String connectorName, Map<String, String> properties)
+    public void createCatalog(Name catalogName, Name connectorName, Map<String, String> properties)
     {
         throw new UnsupportedOperationException();
     }
@@ -562,7 +562,7 @@ public class LocalQueryRunner
     }
 
     @Override
-    public List<QualifiedObjectName> listTables(Session session, String catalog, String schema)
+    public List<QualifiedObjectName> listTables(Session session, Name catalog, Name schema)
     {
         lock.readLock().lock();
         try {
@@ -578,7 +578,7 @@ public class LocalQueryRunner
     }
 
     @Override
-    public boolean tableExists(Session session, String table)
+    public boolean tableExists(Session session, Name table)
     {
         lock.readLock().lock();
         try {

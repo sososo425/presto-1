@@ -28,6 +28,7 @@ import io.prestosql.security.AllowAllAccessControl;
 import io.prestosql.spi.PrestoException;
 import io.prestosql.spi.connector.ColumnHandle;
 import io.prestosql.spi.connector.ConnectorTableMetadata;
+import io.prestosql.spi.connector.Name;
 import io.prestosql.spi.type.Type;
 import io.prestosql.spi.type.TypeManager;
 import io.prestosql.spi.type.TypeSignature;
@@ -147,7 +148,7 @@ public class TestCreateTableTask
         }
 
         @Override
-        public void createTable(Session session, String catalogName, ConnectorTableMetadata tableMetadata, boolean ignoreExisting)
+        public void createTable(Session session, Name catalogName, ConnectorTableMetadata tableMetadata, boolean ignoreExisting)
         {
             createTableCallCount.incrementAndGet();
             if (!ignoreExisting) {
@@ -174,7 +175,7 @@ public class TestCreateTableTask
         }
 
         @Override
-        public Optional<ConnectorId> getCatalogHandle(Session session, String catalogName)
+        public Optional<ConnectorId> getCatalogHandle(Session session, Name catalogName)
         {
             if (catalogHandle.getCatalogName().equals(catalogName)) {
                 return Optional.of(catalogHandle);

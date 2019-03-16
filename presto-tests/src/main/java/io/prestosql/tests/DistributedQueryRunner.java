@@ -37,6 +37,7 @@ import io.prestosql.server.testing.TestingPrestoServer;
 import io.prestosql.spi.Node;
 import io.prestosql.spi.Plugin;
 import io.prestosql.spi.QueryId;
+import io.prestosql.spi.connector.Name;
 import io.prestosql.split.PageSourceManager;
 import io.prestosql.split.SplitManager;
 import io.prestosql.sql.parser.SqlParserOptions;
@@ -293,18 +294,18 @@ public class DistributedQueryRunner
         log.info("Installed plugin %s in %s", plugin.getClass().getSimpleName(), nanosSince(start).convertToMostSuccinctTimeUnit());
     }
 
-    public void createCatalog(String catalogName, String connectorName)
+    public void createCatalog(Name catalogName, Name connectorName)
     {
         createCatalog(catalogName, connectorName, ImmutableMap.of());
     }
 
     @Override
-    public void createCatalog(String catalogName, String connectorName, Map<String, String> properties)
+    public void createCatalog(Name catalogName, Name connectorName, Map<String, String> properties)
     {
         long start = System.nanoTime();
         Set<ConnectorId> connectorIds = new HashSet<>();
         for (TestingPrestoServer server : servers) {
-            connectorIds.add(server.createCatalog(catalogName, connectorName, properties));
+            connectorIds.add(server.createCatalog(catalogName.getLegacyName(), connectorName.getLegacyName(), properties));
         }
         ConnectorId connectorId = getOnlyElement(connectorIds);
         log.info("Created catalog %s (%s) in %s", catalogName, connectorId, nanosSince(start));
@@ -337,11 +338,11 @@ public class DistributedQueryRunner
     }
 
     @Override
-    public List<QualifiedObjectName> listTables(Session session, String catalog, String schema)
+    public List<QualifiedObjectName> listTables(Session session, Name catalog, Name schema)
     {
         lock.readLock().lock();
         try {
-            return prestoClient.listTables(session, catalog, schema);
+            return prestoClient.listTables(session, catalog.getLegacyName(), schema.getLegacyName());
         }
         finally {
             lock.readLock().unlock();
@@ -349,7 +350,7 @@ public class DistributedQueryRunner
     }
 
     @Override
-    public boolean tableExists(Session session, String table)
+    public boolean tableExists(Session session, Name table)
     {
         lock.readLock().lock();
         try {

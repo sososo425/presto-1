@@ -39,6 +39,7 @@ import io.prestosql.spi.PrestoException;
 import io.prestosql.spi.connector.CatalogSchemaName;
 import io.prestosql.spi.connector.ColumnHandle;
 import io.prestosql.spi.connector.ColumnMetadata;
+import io.prestosql.spi.connector.Name;
 import io.prestosql.spi.function.OperatorType;
 import io.prestosql.spi.security.AccessDeniedException;
 import io.prestosql.spi.security.Identity;
@@ -315,7 +316,7 @@ class StatementAnalyzer
             TableMetadata tableMetadata = metadata.getTableMetadata(session, targetTableHandle.get());
             List<String> tableColumns = tableMetadata.getColumns().stream()
                     .filter(column -> !column.isHidden())
-                    .map(ColumnMetadata::getName)
+                    .map(x -> x.getName().getLegacyName())
                     .collect(toImmutableList());
 
             List<String> insertColumns;
@@ -339,7 +340,7 @@ class StatementAnalyzer
                 insertColumns = tableColumns;
             }
 
-            Map<String, ColumnHandle> columnHandles = metadata.getColumnHandles(session, targetTableHandle.get());
+            Map<Name, ColumnHandle> columnHandles = metadata.getColumnHandles(session, targetTableHandle.get());
             analysis.setInsert(new Analysis.Insert(
                     targetTableHandle.get(),
                     insertColumns.stream().map(columnHandles::get).collect(toImmutableList())));
@@ -425,7 +426,7 @@ class StatementAnalyzer
 
             Map<String, Object> analyzeProperties = metadata.getAnalyzePropertyManager().getProperties(
                     connectorId,
-                    connectorId.getCatalogName(),
+                    createNonDelimitedName(connectorId.getCatalogName()),
                     mapFromProperties(node.getProperties()),
                     session,
                     metadata,
@@ -438,7 +439,7 @@ class StatementAnalyzer
                     accessControl,
                     session.getIdentity(),
                     ImmutableMultimap.<QualifiedObjectName, String>builder()
-                            .putAll(tableName, metadata.getColumnHandles(session, tableHandle).keySet())
+                            .putAll(tableName, metadata.getColumnHandles(session, tableHandle).keySet().stream().map(Name::getLegacyName).collect(toImmutableSet()))
                             .build());
             try {
                 accessControl.checkCanInsertIntoTable(session.getRequiredTransactionId(), session.getIdentity(), tableName);
@@ -898,18 +899,18 @@ class StatementAnalyzer
                 throw new SemanticException(MISSING_TABLE, table, "Table %s does not exist", name);
             }
             TableMetadata tableMetadata = metadata.getTableMetadata(session, tableHandle.get());
-            Map<String, ColumnHandle> columnHandles = metadata.getColumnHandles(session, tableHandle.get());
+            Map<Name, ColumnHandle> columnHandles = metadata.getColumnHandles(session, tableHandle.get());
 
             // TODO: discover columns lazily based on where they are needed (to support connectors that can't enumerate all tables)
             ImmutableList.Builder<Field> fields = ImmutableList.builder();
             for (ColumnMetadata column : tableMetadata.getColumns()) {
                 Field field = Field.newQualified(
                         table.getName(),
-                        Optional.of(column.getName()),
+                        Optional.of(column.getName().getLegacyName()),
                         column.getType(),
                         column.isHidden(),
                         Optional.of(name),
-                        Optional.of(column.getName()),
+                        Optional.of(column.getName().getLegacyName()),
                         false);
                 fields.add(field);
                 ColumnHandle columnHandle = columnHandles.get(column.getName());
@@ -1925,7 +1926,7 @@ class StatementAnalyzer
 
                 StatementAnalyzer analyzer = new StatementAnalyzer(analysis, metadata, sqlParser, viewAccessControl, viewSession, WarningCollector.NOOP);
                 Scope queryScope = analyzer.analyze(query, Scope.create());
-                return queryScope.getRelationType().withAlias(name.getObjectName(), null);
+                return queryScope.getRelationType().withAlias(name.getObjectName().getLegacyName(), null);
             }
             catch (RuntimeException e) {
                 throwIfInstanceOf(e, PrestoException.class);

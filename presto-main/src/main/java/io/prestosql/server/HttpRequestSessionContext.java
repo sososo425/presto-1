@@ -71,6 +71,7 @@ import static io.prestosql.client.PrestoHeaders.PRESTO_TIME_ZONE;
 import static io.prestosql.client.PrestoHeaders.PRESTO_TRACE_TOKEN;
 import static io.prestosql.client.PrestoHeaders.PRESTO_TRANSACTION_ID;
 import static io.prestosql.client.PrestoHeaders.PRESTO_USER;
+import static io.prestosql.spi.connector.Name.createNonDelimitedName;
 import static io.prestosql.sql.parser.ParsingOptions.DecimalLiteralTreatment.AS_DOUBLE;
 import static java.lang.String.format;
 

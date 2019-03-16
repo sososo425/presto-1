@@ -19,6 +19,7 @@ import io.prestosql.client.ClientCapabilities;
 import io.prestosql.metadata.Metadata;
 import io.prestosql.security.AccessControl;
 import io.prestosql.spi.PrestoException;
+import io.prestosql.spi.connector.Name;
 import io.prestosql.sql.SqlPath;
 import io.prestosql.sql.SqlPathElement;
 import io.prestosql.sql.analyzer.SemanticException;
@@ -33,7 +34,6 @@ import static com.google.common.util.concurrent.Futures.immediateFuture;
 import static io.prestosql.spi.StandardErrorCode.NOT_FOUND;
 import static io.prestosql.spi.StandardErrorCode.NOT_SUPPORTED;
 import static io.prestosql.sql.analyzer.SemanticErrorCode.CATALOG_NOT_SPECIFIED;
-import static java.util.Locale.ENGLISH;
 
 public class SetPathTask
         implements DataDefinitionTask<SetPath>
@@ -68,7 +68,7 @@ public class SetPathTask
             }
 
             element.getCatalog().ifPresent(catalog -> {
-                String catalogName = catalog.getValue().toLowerCase(ENGLISH);
+                Name catalogName = new Name(catalog.getValue(), catalog.isDelimited());
                 if (!metadata.getCatalogHandle(session, catalogName).isPresent()) {
                     throw new PrestoException(NOT_FOUND, "Catalog does not exist: " + catalogName);
                 }

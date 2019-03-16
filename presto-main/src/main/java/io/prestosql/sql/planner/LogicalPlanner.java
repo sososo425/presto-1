@@ -35,6 +35,7 @@ import io.prestosql.spi.PrestoException;
 import io.prestosql.spi.connector.ColumnHandle;
 import io.prestosql.spi.connector.ColumnMetadata;
 import io.prestosql.spi.connector.ConnectorTableMetadata;
+import io.prestosql.spi.connector.Name;
 import io.prestosql.spi.statistics.TableStatisticsMetadata;
 import io.prestosql.spi.type.Type;
 import io.prestosql.sql.analyzer.Analysis;
@@ -90,6 +91,7 @@ import static com.google.common.collect.ImmutableMap.toImmutableMap;
 import static com.google.common.collect.Streams.zip;
 import static io.prestosql.spi.StandardErrorCode.NOT_FOUND;
 import static io.prestosql.spi.StandardErrorCode.NOT_SUPPORTED;
+import static io.prestosql.spi.connector.Name.createNonDelimitedName;
 import static io.prestosql.spi.statistics.TableStatisticType.ROW_COUNT;
 import static io.prestosql.spi.type.BigintType.BIGINT;
 import static io.prestosql.spi.type.VarbinaryType.VARBINARY;
@@ -239,21 +241,21 @@ public class LogicalPlanner
         TableHandle targetTable = analysis.getAnalyzeTarget().get();
 
         // Plan table scan
-        Map<String, ColumnHandle> columnHandles = metadata.getColumnHandles(session, targetTable);
+        Map<Name, ColumnHandle> columnHandles = metadata.getColumnHandles(session, targetTable);
         ImmutableList.Builder<Symbol> tableScanOutputs = ImmutableList.builder();
         ImmutableMap.Builder<Symbol, ColumnHandle> symbolToColumnHandle = ImmutableMap.builder();
         ImmutableMap.Builder<String, Symbol> columnNameToSymbol = ImmutableMap.builder();
         TableMetadata tableMetadata = metadata.getTableMetadata(session, targetTable);
         for (ColumnMetadata column : tableMetadata.getColumns()) {
-            Symbol symbol = symbolAllocator.newSymbol(column.getName(), column.getType());
+            Symbol symbol = symbolAllocator.newSymbol(column.getName().getLegacyName(), column.getType());
             tableScanOutputs.add(symbol);
             symbolToColumnHandle.put(symbol, columnHandles.get(column.getName()));
-            columnNameToSymbol.put(column.getName(), symbol);
+            columnNameToSymbol.put(column.getName().getLegacyName(), symbol);
         }
 
         TableStatisticsMetadata tableStatisticsMetadata = metadata.getStatisticsCollectionMetadata(
                 session,
-                targetTable.getConnectorId().getCatalogName(),
+                createNonDelimitedName(targetTable.getConnectorId().getCatalogName()),
                 tableMetadata.getMetadata());
 
         TableStatisticAggregation tableStatisticAggregation = statisticsAggregationPlanner.createStatisticsAggregation(tableStatisticsMetadata, columnNameToSymbol.build());
@@ -294,7 +296,7 @@ public class LogicalPlanner
 
         List<String> columnNames = tableMetadata.getColumns().stream()
                 .filter(column -> !column.isHidden())
-                .map(ColumnMetadata::getName)
+                .map(x -> x.getName().getLegacyName())
                 .collect(toImmutableList());
 
         TableStatisticsMetadata statisticsMetadata = metadata.getStatisticsCollectionMetadataForWrite(session, destination.getCatalogName(), tableMetadata);
@@ -302,7 +304,7 @@ public class LogicalPlanner
         return createTableWriterPlan(
                 analysis,
                 plan,
-                new CreateName(destination.getCatalogName(), tableMetadata, newTableLayout),
+                new CreateName(destination.getCatalogName().getLegacyName(), tableMetadata, newTableLayout),
                 columnNames,
                 newTableLayout,
                 statisticsMetadata);
@@ -318,18 +320,18 @@ public class LogicalPlanner
                 .filter(column -> !column.isHidden())
                 .collect(toImmutableList());
         List<String> visibleTableColumnNames = visibleTableColumns.stream()
-                .map(ColumnMetadata::getName)
+                .map(x -> x.getName().getLegacyName())
                 .collect(toImmutableList());
 
         RelationPlan plan = createRelationPlan(analysis, insertStatement.getQuery());
 
-        Map<String, ColumnHandle> columns = metadata.getColumnHandles(session, insert.getTarget());
+        Map<Name, ColumnHandle> columns = metadata.getColumnHandles(session, insert.getTarget());
         Assignments.Builder assignments = Assignments.builder();
         for (ColumnMetadata column : tableMetadata.getColumns()) {
             if (column.isHidden()) {
                 continue;
             }
-            Symbol output = symbolAllocator.newSymbol(column.getName(), column.getType());
+            Symbol output = symbolAllocator.newSymbol(column.getName().getLegacyName(), column.getType());
             int index = insert.getColumns().indexOf(columns.get(column.getName()));
             if (index < 0) {
                 Expression cast = new Cast(new NullLiteral(), column.getType().getTypeSignature().toString());
@@ -352,7 +354,7 @@ public class LogicalPlanner
         ProjectNode projectNode = new ProjectNode(idAllocator.getNextId(), plan.getRoot(), assignments.build());
 
         List<Field> fields = visibleTableColumns.stream()
-                .map(column -> Field.newUnqualified(column.getName(), column.getType()))
+                .map(column -> Field.newUnqualified(column.getName().getLegacyName(), column.getType()))
                 .collect(toImmutableList());
         Scope scope = Scope.builder().withRelationType(RelationId.anonymous(), new RelationType(fields)).build();
 
@@ -360,7 +362,7 @@ public class LogicalPlanner
 
         Optional<NewTableLayout> newTableLayout = metadata.getInsertLayout(session, insert.getTarget());
         String catalogName = insert.getTarget().getConnectorId().getCatalogName();
-        TableStatisticsMetadata statisticsMetadata = metadata.getStatisticsCollectionMetadataForWrite(session, catalogName, tableMetadata.getMetadata());
+        TableStatisticsMetadata statisticsMetadata = metadata.getStatisticsCollectionMetadataForWrite(session, createNonDelimitedName(catalogName), tableMetadata.getMetadata());
 
         return createTableWriterPlan(
                 analysis,

@@ -120,7 +120,7 @@ public class TestingMetadata
         ImmutableMap.Builder<String, ColumnHandle> builder = ImmutableMap.builder();
         int index = 0;
         for (ColumnMetadata columnMetadata : getTableMetadata(session, tableHandle).getColumns()) {
-            builder.put(columnMetadata.getName(), new TestingColumnHandle(columnMetadata.getName(), index, columnMetadata.getType()));
+            builder.put(columnMetadata.getName().getLegacyName(), new TestingColumnHandle(columnMetadata.getName().getLegacyName(), index, columnMetadata.getType()));
             index++;
         }
         return builder.build();
@@ -135,7 +135,7 @@ public class TestingMetadata
         for (SchemaTableName tableName : listTables(session, prefix.getSchema())) {
             ImmutableList.Builder<ColumnMetadata> columns = ImmutableList.builder();
             for (ColumnMetadata column : tables.get(tableName).getColumns()) {
-                columns.add(new ColumnMetadata(column.getName(), column.getType()));
+                columns.add(new ColumnMetadata(column.getName().getLegacyName(), column.getType()));
             }
             tableColumns.put(tableName, columns.build());
         }

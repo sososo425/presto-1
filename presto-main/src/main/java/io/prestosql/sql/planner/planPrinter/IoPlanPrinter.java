@@ -524,7 +524,7 @@ public class IoPlanPrinter
             for (Map.Entry<ColumnHandle, Domain> entry : constraint.getDomains().get().entrySet()) {
                 ColumnMetadata columnMetadata = metadata.getColumnMetadata(session, tableHandle, entry.getKey());
                 columnConstraints.add(new ColumnConstraint(
-                        columnMetadata.getName(),
+                        columnMetadata.getName().getLegacyName(),
                         columnMetadata.getType().getTypeSignature(),
                         parseDomain(entry.getValue().simplify())));
             }

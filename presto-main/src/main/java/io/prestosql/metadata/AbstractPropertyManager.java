@@ -20,6 +20,7 @@ import io.prestosql.connector.ConnectorId;
 import io.prestosql.spi.ErrorCodeSupplier;
 import io.prestosql.spi.PrestoException;
 import io.prestosql.spi.block.BlockBuilder;
+import io.prestosql.spi.connector.Name;
 import io.prestosql.spi.session.PropertyMetadata;
 import io.prestosql.spi.type.Type;
 import io.prestosql.sql.analyzer.SemanticException;
@@ -70,7 +71,7 @@ abstract class AbstractPropertyManager
 
     public final Map<String, Object> getProperties(
             ConnectorId connectorId,
-            String catalog, // only use this for error messages
+            Name catalog, // only use this for error messages
             Map<String, Expression> sqlPropertyValues,
             Session session,
             Metadata metadata,

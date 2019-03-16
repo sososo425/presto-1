@@ -195,7 +195,7 @@ final class ShowQueriesRewrite
                 throw new SemanticException(MISSING_SCHEMA, showTables, "Schema '%s' does not exist", schema.getSchemaName());
             }
 
-            Expression predicate = equal(identifier("table_schema"), new StringLiteral(schema.getSchemaName()));
+            Expression predicate = equal(identifier("table_schema"), new StringLiteral(schema.getSchemaName().getLegacyName()));
 
             Optional<String> likePattern = showTables.getLikePattern();
             if (likePattern.isPresent()) {
@@ -208,7 +208,7 @@ final class ShowQueriesRewrite
 
             return simpleQuery(
                     selectList(aliasedName("table_name", "Table")),
-                    from(schema.getCatalogName(), TABLE_TABLES),
+                    from(schema.getCatalogName().getLegacyName(), TABLE_TABLES),
                     predicate,
                     ordering(ascending("table_name")));
         }
@@ -228,16 +228,16 @@ final class ShowQueriesRewrite
                     throw new SemanticException(MISSING_TABLE, showGrants, "Table '%s' does not exist", tableName);
                 }
 
-                catalogName = qualifiedTableName.getCatalogName();
+                catalogName = qualifiedTableName.getCatalogName().getLegacyName();
 
                 accessControl.checkCanShowTablesMetadata(
                         session.getRequiredTransactionId(),
                         session.getIdentity(),
-                        new CatalogSchemaName(catalogName, qualifiedTableName.getSchemaName()));
+                        new CatalogSchemaName(catalogName, qualifiedTableName.getSchemaName().getLegacyName()));
 
                 predicate = Optional.of(combineConjuncts(
-                        equal(identifier("table_schema"), new StringLiteral(qualifiedTableName.getSchemaName())),
-                        equal(identifier("table_name"), new StringLiteral(qualifiedTableName.getObjectName()))));
+                        equal(identifier("table_schema"), new StringLiteral(qualifiedTableName.getSchemaName().getLegacyName())),
+                        equal(identifier("table_name"), new StringLiteral(qualifiedTableName.getObjectName().getLegacyName()))));
             }
             else {
                 if (catalogName == null) {
@@ -301,7 +301,7 @@ final class ShowQueriesRewrite
             PrestoPrincipal principal = new PrestoPrincipal(PrincipalType.USER, session.getUser());
 
             accessControl.checkCanShowRoleGrants(session.getRequiredTransactionId(), session.getIdentity(), catalog);
-            List<Expression> rows = metadata.listRoleGrants(session, catalog.getLegacyName(), principal).stream()
+            List<Expression> rows = metadata.listRoleGrants(session, catalog, principal).stream()
                     .map(roleGrant -> row(new StringLiteral(roleGrant.getRoleName())))
                     .collect(toList());
 
@@ -373,10 +373,10 @@ final class ShowQueriesRewrite
                             aliasedName("data_type", "Type"),
                             aliasedNullToEmpty("extra_info", "Extra"),
                             aliasedNullToEmpty("comment", "Comment")),
-                    from(tableName.getCatalogName(), TABLE_COLUMNS),
+                    from(tableName.getCatalogName().getLegacyName(), TABLE_COLUMNS),
                     logicalAnd(
-                            equal(identifier("table_schema"), new StringLiteral(tableName.getSchemaName())),
-                            equal(identifier("table_name"), new StringLiteral(tableName.getObjectName()))),
+                            equal(identifier("table_schema"), new StringLiteral(tableName.getSchemaName().getLegacyName())),
+                            equal(identifier("table_name"), new StringLiteral(tableName.getObjectName().getLegacyName()))),
                     ordering(ascending("ordinal_position")));
         }
 
@@ -432,8 +432,8 @@ final class ShowQueriesRewrite
                 Query query = parseView(viewDefinition.get().getOriginalSql(), objectName, node);
                 List<Identifier> parts = node.getName().getOriginalParts();
                 Identifier tableName = parts.get(0);
-                Identifier schemaName = (parts.size() > 1) ? parts.get(1) : new Identifier(objectName.getSchemaName());
-                Identifier catalogName = (parts.size() > 2) ? parts.get(2) : new Identifier(objectName.getCatalogName());
+                Identifier schemaName = (parts.size() > 1) ? parts.get(1) : new Identifier(objectName.getSchemaName().getLegacyName());
+                Identifier catalogName = (parts.size() > 2) ? parts.get(2) : new Identifier(objectName.getCatalogName().getLegacyName());
                 String sql = formatSql(new CreateView(QualifiedName.of(ImmutableList.of(catalogName, schemaName, tableName)), query, false, Optional.empty()), Optional.of(parameters)).trim();
                 return singleValueQuery("Create View", sql);
             }
@@ -465,7 +465,7 @@ final class ShowQueriesRewrite
                 List<Property> propertyNodes = buildProperties(objectName, Optional.empty(), INVALID_TABLE_PROPERTY, properties, allTableProperties);
 
                 CreateTable createTable = new CreateTable(
-                        QualifiedName.of(objectName.getCatalogName(), objectName.getSchemaName(), objectName.getObjectName()),
+                        QualifiedName.of(objectName.getCatalogName().getLegacyName(), objectName.getSchemaName().getName(), objectName.getObjectName().getName()),
                         columns,
                         false,
                         propertyNodes,
