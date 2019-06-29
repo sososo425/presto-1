@@ -88,6 +88,7 @@ import io.prestosql.sql.tree.WindowFrame;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -693,7 +694,7 @@ public final class ExpressionFormatter
             return '(' + process(left, null) + ' ' + operator + ' ' + process(right, null) + ')';
         }
 
-        private String joinExpressions(List<Expression> expressions)
+        private String joinExpressions(Collection<Expression> expressions)
         {
             return Joiner.on(", ").join(expressions.stream()
                     .map((e) -> process(e, null))

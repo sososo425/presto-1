@@ -118,6 +118,7 @@ import static com.google.common.base.Predicates.instanceOf;
 import static com.google.common.base.Throwables.throwIfInstanceOf;
 import static com.google.common.base.Verify.verify;
 import static com.google.common.collect.ImmutableList.toImmutableList;
+import static com.google.common.collect.ImmutableSet.toImmutableSet;
 import static com.google.common.collect.Iterables.getOnlyElement;
 import static io.prestosql.metadata.LiteralFunction.isSupportedLiteralType;
 import static io.prestosql.operator.scalar.ScalarFunctionImplementation.NullConvention.RETURN_NULL_ON_NULL;
@@ -610,13 +611,13 @@ public class ExpressionInterpreter
             if (hasUnresolvedValue) {
                 Type type = type(node.getValue());
                 List<Expression> expressionValues = toExpressions(values, types);
-                List<Expression> simplifiedExpressionValues = Stream.concat(
+                Set<Expression> simplifiedExpressionValues = Stream.concat(
                         expressionValues.stream()
                                 .filter(DeterminismEvaluator::isDeterministic)
                                 .distinct(),
                         expressionValues.stream()
                                 .filter((expression -> !isDeterministic(expression))))
-                        .collect(toImmutableList());
+                        .collect(toImmutableSet());
                 return new InPredicate(toExpression(value, type), new InListExpression(simplifiedExpressionValues));
             }
             if (hasNullValue) {

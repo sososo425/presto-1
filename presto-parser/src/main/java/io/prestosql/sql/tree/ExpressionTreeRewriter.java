@@ -14,8 +14,10 @@
 package io.prestosql.sql.tree;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
@@ -43,7 +45,7 @@ public final class ExpressionTreeRewriter<C>
         this.visitor = new RewritingVisitor();
     }
 
-    private List<Expression> rewrite(List<Expression> items, Context<C> context)
+    private List<Expression> rewrite(Collection<Expression> items, Context<C> context)
     {
         ImmutableList.Builder<Expression> builder = ImmutableList.builder();
         for (Expression expression : items) {
@@ -664,7 +666,7 @@ public final class ExpressionTreeRewriter<C>
             List<Expression> values = rewrite(node.getValues(), context);
 
             if (!sameElements(node.getValues(), values)) {
-                return new InListExpression(values);
+                return new InListExpression(ImmutableSet.copyOf(values));
             }
 
             return node;

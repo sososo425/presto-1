@@ -343,7 +343,7 @@ public class TestEqualityInference
                 new NullIfExpression(nameReference("b"), number(1)),
                 new IfExpression(nameReference("b"), number(1), new NullLiteral()),
                 new DereferenceExpression(nameReference("b"), identifier("x")),
-                new InPredicate(nameReference("b"), new InListExpression(ImmutableList.of(new NullLiteral()))),
+                new InPredicate(nameReference("b"), new InListExpression(ImmutableSet.of(new NullLiteral()))),
                 new SearchedCaseExpression(ImmutableList.of(new WhenClause(new IsNotNullPredicate(nameReference("b")), new NullLiteral())), Optional.empty()),
                 new SimpleCaseExpression(nameReference("b"), ImmutableList.of(new WhenClause(number(1), new NullLiteral())), Optional.empty()),
                 new SubscriptExpression(new ArrayConstructor(ImmutableList.of(new NullLiteral())), nameReference("b")));

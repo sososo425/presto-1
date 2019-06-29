@@ -40,10 +40,13 @@ import io.prestosql.sql.tree.SymbolReference;
 import io.prestosql.sql.tree.TryExpression;
 import io.prestosql.sql.tree.WhenClause;
 
-import java.util.List;
+import java.util.Collection;
 import java.util.Optional;
+import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.collect.Iterables.getOnlyElement;
+import static com.google.common.collect.Streams.zip;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
@@ -162,9 +165,9 @@ final class ExpressionVerifier
                  * Since the expected value doesn't go through all of that, we have to deal with the case
                  * of the actual value being unpacked, but the expected value being an InListExpression.
                  */
-                List<Expression> values = ((InListExpression) expected.getValueList()).getValues();
+                Set<Expression> values = ((InListExpression) expected.getValueList()).getValues();
                 checkState(values.size() == 1, "Multiple expressions in expected value list %s, but actual value is not a list", values, actual.getValue());
-                Expression onlyExpectedExpression = values.get(0);
+                Expression onlyExpectedExpression = getOnlyElement(values);
                 return process(actual.getValue(), expected.getValue()) && process(actual.getValueList(), onlyExpectedExpression);
             }
         }
@@ -410,17 +413,12 @@ final class ExpressionVerifier
         return process(actual.getValues(), expectedInList.getValues());
     }
 
-    private <T extends Node> boolean process(List<T> actuals, List<T> expecteds)
+    private <T extends Node> boolean process(Collection<T> actuals, Collection<T> expecteds)
     {
         if (actuals.size() != expecteds.size()) {
             return false;
         }
-        for (int i = 0; i < actuals.size(); i++) {
-            if (!process(actuals.get(i), expecteds.get(i))) {
-                return false;
-            }
-        }
-        return true;
+        return zip(actuals.stream(), expecteds.stream(), this::process).allMatch(x -> x);
     }
 
     private <T extends Node> boolean process(Optional<T> actual, Optional<T> expected)

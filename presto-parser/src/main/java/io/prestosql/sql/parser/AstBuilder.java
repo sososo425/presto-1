@@ -1224,7 +1224,7 @@ class AstBuilder
         Expression result = new InPredicate(
                 getLocation(context),
                 (Expression) visit(context.value),
-                new InListExpression(getLocation(context), visit(context.expression(), Expression.class)));
+                new InListExpression(getLocation(context), ImmutableSet.copyOf(visit(context.expression(), Expression.class))));
 
         if (context.NOT() != null) {
             result = new NotExpression(getLocation(context), result);

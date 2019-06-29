@@ -14,10 +14,12 @@
 package io.prestosql.sql.tree;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.Objects.requireNonNull;
@@ -25,27 +27,27 @@ import static java.util.Objects.requireNonNull;
 public class InListExpression
         extends Expression
 {
-    private final List<Expression> values;
+    private final Set<Expression> values;
 
-    public InListExpression(List<Expression> values)
+    public InListExpression(Set<Expression> values)
     {
         this(Optional.empty(), values);
     }
 
-    public InListExpression(NodeLocation location, List<Expression> values)
+    public InListExpression(NodeLocation location, Set<Expression> values)
     {
         this(Optional.of(location), values);
     }
 
-    private InListExpression(Optional<NodeLocation> location, List<Expression> values)
+    private InListExpression(Optional<NodeLocation> location, Set<Expression> values)
     {
         super(location);
         requireNonNull(values, "values is null");
         checkArgument(!values.isEmpty(), "values cannot be empty");
-        this.values = ImmutableList.copyOf(values);
+        this.values = ImmutableSet.copyOf(values);
     }
 
-    public List<Expression> getValues()
+    public Set<Expression> getValues()
     {
         return values;
     }
@@ -59,7 +61,7 @@ public class InListExpression
     @Override
     public List<? extends Node> getChildren()
     {
-        return values;
+        return ImmutableList.copyOf(values);
     }
 
     @Override

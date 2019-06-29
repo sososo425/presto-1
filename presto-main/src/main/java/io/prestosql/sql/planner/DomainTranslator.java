@@ -55,9 +55,11 @@ import io.prestosql.type.TypeCoercion;
 import javax.annotation.Nullable;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
@@ -83,6 +85,7 @@ import static java.util.Comparator.comparing;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.collectingAndThen;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 
 public final class DomainTranslator
 {
@@ -179,7 +182,7 @@ public final class DomainTranslator
         return combineConjuncts(rangeConjuncts);
     }
 
-    private Expression combineRangeWithExcludedPoints(Type type, SymbolReference reference, Range range, List<Expression> excludedPoints)
+    private Expression combineRangeWithExcludedPoints(Type type, SymbolReference reference, Range range, Set<Expression> excludedPoints)
     {
         if (excludedPoints.isEmpty()) {
             return processRange(type, range, reference);
@@ -196,7 +199,7 @@ public final class DomainTranslator
     private List<Expression> extractDisjuncts(Type type, Ranges ranges, SymbolReference reference)
     {
         List<Expression> disjuncts = new ArrayList<>();
-        List<Expression> singleValues = new ArrayList<>();
+        Set<Expression> singleValues = new HashSet<>();
         List<Range> orderedRanges = ranges.getOrderedRanges();
 
         SortedRangeSet sortedRangeSet = SortedRangeSet.copyOf(type, orderedRanges);
@@ -213,7 +216,7 @@ public final class DomainTranslator
             }
 
             // attempt to optimize ranges that can be coalesced as long as single value points are excluded
-            List<Expression> singleValuesInRange = new ArrayList<>();
+            Set<Expression> singleValuesInRange = new HashSet<>();
             while (singleValueExclusions.hasNext() && range.contains(singleValueExclusions.peek())) {
                 singleValuesInRange.add(literalEncoder.toExpression(singleValueExclusions.next().getSingleValue(), type));
             }
@@ -238,9 +241,9 @@ public final class DomainTranslator
 
     private List<Expression> extractDisjuncts(Type type, DiscreteValues discreteValues, SymbolReference reference)
     {
-        List<Expression> values = discreteValues.getValues().stream()
+        Set<Expression> values = discreteValues.getValues().stream()
                 .map(object -> literalEncoder.toExpression(object, type))
-                .collect(toList());
+                .collect(toSet());
 
         // If values is empty, then the equatableValues was either ALL or NONE, both of which should already have been checked for
         checkState(!values.isEmpty());

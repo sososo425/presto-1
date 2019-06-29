@@ -72,6 +72,8 @@ import io.prestosql.sql.tree.GroupingOperation;
 import io.prestosql.sql.tree.GroupingSets;
 import io.prestosql.sql.tree.Identifier;
 import io.prestosql.sql.tree.IfExpression;
+import io.prestosql.sql.tree.InListExpression;
+import io.prestosql.sql.tree.InPredicate;
 import io.prestosql.sql.tree.Insert;
 import io.prestosql.sql.tree.Intersect;
 import io.prestosql.sql.tree.IntervalLiteral;
@@ -1344,6 +1346,13 @@ public class TestSqlParser
         assertExpression("U&'\u6d4B\u8Bd5ABC!6d4B!8Bd5' UESCAPE '!'", new StringLiteral("\u6d4B\u8Bd5ABC\u6d4B\u8Bd5"));
         assertExpression("U&'hello\\6d4B\\8Bd5\\+10FFFFworld\\7F16\\7801' UESCAPE '!'",
                 new StringLiteral("hello\\6d4B\\8Bd5\\+10FFFFworld\\7F16\\7801"));
+    }
+
+    @Test
+    public void testInListExpression()
+    {
+        assertExpression("a IN (1, 2, 3)", new InPredicate(identifier("a"), new InListExpression(ImmutableSet.of(new LongLiteral("1"), new LongLiteral("2"), new LongLiteral("3")))));
+        assertExpression("a IN (1, 2, 3, 3, 4)", new InPredicate(identifier("a"), new InListExpression(ImmutableSet.of(new LongLiteral("1"), new LongLiteral("2"), new LongLiteral("3"), new LongLiteral("4")))));
     }
 
     @Test

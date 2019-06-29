@@ -464,7 +464,7 @@ public class TestEffectivePredicateExtractor
                                 ImmutableList.of(bigintLiteral(2)))),
                 types,
                 typeAnalyzer),
-                new InPredicate(AE, new InListExpression(ImmutableList.of(bigintLiteral(1), bigintLiteral(2)))));
+                new InPredicate(AE, new InListExpression(ImmutableSet.of(bigintLiteral(1), bigintLiteral(2)))));
 
         // one column with null
         assertEquals(effectivePredicateExtractor.extract(
@@ -479,7 +479,7 @@ public class TestEffectivePredicateExtractor
                 types,
                 typeAnalyzer),
                 or(
-                        new InPredicate(AE, new InListExpression(ImmutableList.of(bigintLiteral(1), bigintLiteral(2)))),
+                        new InPredicate(AE, new InListExpression(ImmutableSet.of(bigintLiteral(1), bigintLiteral(2)))),
                         new IsNullPredicate(AE)));
 
         // all nulls
@@ -521,8 +521,8 @@ public class TestEffectivePredicateExtractor
                 types,
                 typeAnalyzer),
                 and(
-                        new InPredicate(AE, new InListExpression(ImmutableList.of(bigintLiteral(1), bigintLiteral(2)))),
-                        new InPredicate(BE, new InListExpression(ImmutableList.of(bigintLiteral(100), bigintLiteral(200))))));
+                        new InPredicate(AE, new InListExpression(ImmutableSet.of(bigintLiteral(1), bigintLiteral(2)))),
+                        new InPredicate(BE, new InListExpression(ImmutableSet.of(bigintLiteral(100), bigintLiteral(200))))));
 
         // multiple columns with null
         assertEquals(effectivePredicateExtractor.extract(

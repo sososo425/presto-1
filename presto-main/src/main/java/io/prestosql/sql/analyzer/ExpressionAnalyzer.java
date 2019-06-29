@@ -108,6 +108,7 @@ import io.prestosql.type.TypeCoercion;
 import javax.annotation.Nullable;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -1369,7 +1370,7 @@ public class ExpressionAnalyzer
             throw new SemanticException(TYPE_MISMATCH, node, message, firstType, secondType);
         }
 
-        private Type coerceToSingleType(StackableAstVisitorContext<Context> context, String message, List<Expression> expressions)
+        private Type coerceToSingleType(StackableAstVisitorContext<Context> context, String message, Collection<Expression> expressions)
         {
             // determine super type
             Type superType = UNKNOWN;
