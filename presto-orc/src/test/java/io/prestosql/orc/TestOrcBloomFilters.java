@@ -316,6 +316,7 @@ public class TestOrcBloomFilters
                 null,
                 null,
                 null,
+                null,
                 toBloomFilter(orcBloomFilter)));
 
         Map<Integer, ColumnStatistics> nonMatchingStatisticsByColumnIndex = ImmutableMap.of(0, new ColumnStatistics(
@@ -328,6 +329,7 @@ public class TestOrcBloomFilters
                 null,
                 null,
                 null,
+                null,
                 toBloomFilter(emptyOrcBloomFilter)));
 
         Map<Integer, ColumnStatistics> withoutBloomFilterStatisticsByColumnIndex = ImmutableMap.of(0, new ColumnStatistics(
@@ -335,6 +337,7 @@ public class TestOrcBloomFilters
                 0,
                 null,
                 new IntegerStatistics(10L, 2000L, null),
+                null,
                 null,
                 null,
                 null,

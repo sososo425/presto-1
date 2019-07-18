@@ -140,6 +140,7 @@ public class StringStatisticsBuilder
                 null,
                 null,
                 null,
+                null,
                 null);
     }
 

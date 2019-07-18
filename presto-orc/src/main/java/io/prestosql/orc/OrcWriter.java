@@ -409,7 +409,7 @@ public final class OrcWriter
 
         // the 0th column is a struct column for the whole row
         columnEncodings.put(0, new ColumnEncoding(DIRECT, 0));
-        columnStatistics.put(0, new ColumnStatistics((long) stripeRowCount, 0, null, null, null, null, null, null, null, null));
+        columnStatistics.put(0, new ColumnStatistics((long) stripeRowCount, 0, null, null, null, null, null, null, null, null, null));
 
         // add footer
         Optional<ZoneId> timeZone = Optional.of(hiveStorageTimeZone.toTimeZone().toZoneId());

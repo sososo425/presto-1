@@ -95,6 +95,7 @@ public class IntegerStatisticsBuilder
                 null,
                 null,
                 null,
+                null,
                 null);
     }
 
