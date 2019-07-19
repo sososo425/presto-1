@@ -20,6 +20,7 @@ import io.prestosql.orc.metadata.OrcType;
 import io.prestosql.orc.metadata.statistics.BinaryStatisticsBuilder;
 import io.prestosql.orc.metadata.statistics.DateStatisticsBuilder;
 import io.prestosql.orc.metadata.statistics.IntegerStatisticsBuilder;
+import io.prestosql.orc.metadata.statistics.TimestampStatisticsBuilder;
 import io.prestosql.spi.type.Type;
 import org.joda.time.DateTimeZone;
 
@@ -67,7 +68,7 @@ public final class ColumnWriters
                 return new DecimalColumnWriter(columnIndex, type, compression, bufferSize);
 
             case TIMESTAMP:
-                return new TimestampColumnWriter(columnIndex, type, compression, bufferSize, hiveStorageTimeZone);
+                return new TimestampColumnWriter(columnIndex, type, compression, bufferSize, hiveStorageTimeZone, TimestampStatisticsBuilder::new);
 
             case BINARY:
                 return new SliceDirectColumnWriter(columnIndex, type, compression, bufferSize, BinaryStatisticsBuilder::new);

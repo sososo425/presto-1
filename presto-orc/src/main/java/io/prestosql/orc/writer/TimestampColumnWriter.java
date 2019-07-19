@@ -25,6 +25,7 @@ import io.prestosql.orc.metadata.RowGroupIndex;
 import io.prestosql.orc.metadata.Stream;
 import io.prestosql.orc.metadata.Stream.StreamKind;
 import io.prestosql.orc.metadata.statistics.ColumnStatistics;
+import io.prestosql.orc.metadata.statistics.LongValueStatisticsBuilder;
 import io.prestosql.orc.stream.LongOutputStream;
 import io.prestosql.orc.stream.LongOutputStreamV2;
 import io.prestosql.orc.stream.PresentOutputStream;
@@ -40,6 +41,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
@@ -67,11 +69,12 @@ public class TimestampColumnWriter
     private final List<ColumnStatistics> rowGroupColumnStatistics = new ArrayList<>();
     private final long baseTimestampInSeconds;
 
-    private int nonNullValueCount;
+    private final Supplier<LongValueStatisticsBuilder> statisticsBuilderSupplier;
+    private LongValueStatisticsBuilder statisticsBuilder;
 
     private boolean closed;
 
-    public TimestampColumnWriter(int column, Type type, CompressionKind compression, int bufferSize, DateTimeZone hiveStorageTimeZone)
+    public TimestampColumnWriter(int column, Type type, CompressionKind compression, int bufferSize, DateTimeZone hiveStorageTimeZone, Supplier<LongValueStatisticsBuilder> statisticsBuilderSupplier)
     {
         checkArgument(column >= 0, "column is negative");
         this.column = column;
@@ -82,6 +85,8 @@ public class TimestampColumnWriter
         this.nanosStream = new LongOutputStreamV2(compression, bufferSize, false, SECONDARY);
         this.presentStream = new PresentOutputStream(compression, bufferSize);
         this.baseTimestampInSeconds = new DateTime(2015, 1, 1, 0, 0, requireNonNull(hiveStorageTimeZone, "hiveStorageTimeZone is null")).getMillis() / MILLIS_PER_SECOND;
+        this.statisticsBuilderSupplier = requireNonNull(statisticsBuilderSupplier, "statisticsBuilderSupplier is null");
+        this.statisticsBuilder = statisticsBuilderSupplier.get();
     }
 
     @Override
@@ -141,7 +146,7 @@ public class TimestampColumnWriter
 
                 secondsStream.writeLong(seconds);
                 nanosStream.writeLong(encodedNanos);
-                nonNullValueCount++;
+                statisticsBuilder.addValue(value);
             }
         }
     }
@@ -150,9 +155,9 @@ public class TimestampColumnWriter
     public Map<Integer, ColumnStatistics> finishRowGroup()
     {
         checkState(!closed);
-        ColumnStatistics statistics = new ColumnStatistics((long) nonNullValueCount, 0, null, null, null, null, null, null, null, null, null);
+        ColumnStatistics statistics = statisticsBuilder.buildColumnStatistics();
         rowGroupColumnStatistics.add(statistics);
-        nonNullValueCount = 0;
+        statisticsBuilder = statisticsBuilderSupplier.get();
         return ImmutableMap.of(column, statistics);
     }
 
@@ -247,6 +252,6 @@ public class TimestampColumnWriter
         nanosStream.reset();
         presentStream.reset();
         rowGroupColumnStatistics.clear();
-        nonNullValueCount = 0;
+        statisticsBuilder = statisticsBuilderSupplier.get();
     }
 }

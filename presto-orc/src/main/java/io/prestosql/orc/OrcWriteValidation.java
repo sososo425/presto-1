@@ -37,6 +37,7 @@ import io.prestosql.orc.metadata.statistics.StatisticsHasher;
 import io.prestosql.orc.metadata.statistics.StringStatistics;
 import io.prestosql.orc.metadata.statistics.StringStatisticsBuilder;
 import io.prestosql.orc.metadata.statistics.StripeStatistics;
+import io.prestosql.orc.metadata.statistics.TimestampStatisticsBuilder;
 import io.prestosql.spi.Page;
 import io.prestosql.spi.PrestoException;
 import io.prestosql.spi.block.Block;
@@ -680,7 +681,7 @@ public class OrcWriteValidation
                 fieldBuilders = ImmutableList.of();
             }
             else if (TIMESTAMP.equals(type)) {
-                statisticsBuilder = new CountStatisticsBuilder();
+                statisticsBuilder = new TimestampStatisticsBuilder();
                 fieldExtractor = ignored -> ImmutableList.of();
                 fieldBuilders = ImmutableList.of();
             }
