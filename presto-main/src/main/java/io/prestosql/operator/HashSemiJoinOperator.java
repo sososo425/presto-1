@@ -23,6 +23,7 @@ import io.prestosql.operator.SetBuilderOperator.SetSupplier;
 import io.prestosql.operator.WorkProcessor.TransformationState;
 import io.prestosql.operator.WorkProcessorOperatorAdapter.AdapterWorkProcessorOperator;
 import io.prestosql.operator.WorkProcessorOperatorAdapter.AdapterWorkProcessorOperatorFactory;
+import io.prestosql.operator.WorkProcessorOperatorAdapter.ProcessorContext;
 import io.prestosql.spi.Page;
 import io.prestosql.spi.block.Block;
 import io.prestosql.spi.block.BlockBuilder;
@@ -91,9 +92,9 @@ public class HashSemiJoinOperator
         }
 
         @Override
-        public AdapterWorkProcessorOperator create(Session session, MemoryTrackingContext memoryTrackingContext, DriverYieldSignal yieldSignal)
+        public AdapterWorkProcessorOperator create(ProcessorContext processorContext)
         {
-            return new HashSemiJoinOperator(Optional.empty(), setSupplier, probeJoinChannel, probeJoinHashChannel, memoryTrackingContext);
+            return new HashSemiJoinOperator(Optional.empty(), setSupplier, probeJoinChannel, probeJoinHashChannel, processorContext.getMemoryTrackingContext());
         }
 
         @Override
@@ -115,9 +116,9 @@ public class HashSemiJoinOperator
         }
 
         @Override
-        public WorkProcessorOperator create(Session session, MemoryTrackingContext memoryTrackingContext, DriverYieldSignal yieldSignal, WorkProcessor<Page> sourcePages)
+        public WorkProcessorOperator create(Session session, ProcessorContext processorContext, WorkProcessor<Page> sourcePages)
         {
-            return new HashSemiJoinOperator(Optional.of(sourcePages), setSupplier, probeJoinChannel, probeJoinHashChannel, memoryTrackingContext);
+            return new HashSemiJoinOperator(Optional.of(sourcePages), setSupplier, probeJoinChannel, probeJoinHashChannel, processorContext.getMemoryTrackingContext());
         }
     }
 
