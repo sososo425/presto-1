@@ -16,6 +16,7 @@ package io.prestosql.operator;
 import io.prestosql.spi.Page;
 import io.prestosql.spi.PageBuilder;
 import io.prestosql.spi.block.Block;
+import io.prestosql.spi.block.LazyBlock;
 import io.prestosql.spi.type.Type;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 
@@ -104,7 +105,14 @@ public class LookupJoinPageBuilder
         for (int i = 0; i < probeOutputChannels.length; i++) {
             Block probeBlock = probe.getPage().getBlock(probeOutputChannels[i]);
             if (!isSequentialProbeIndices || length == 0) {
-                blocks[i] = probeBlock.getPositions(probeIndices, 0, probeIndices.length);
+                if (probeBlock.isLoaded()) {
+                    blocks[i] = probeBlock.getPositions(probeIndices, 0, probeIndices.length);
+                }
+                else {
+                    blocks[i] = new LazyBlock(
+                            probeIndices.length,
+                            lazyBlock -> lazyBlock.setBlock(probeBlock.getPositions(probeIndices, 0, probeIndices.length)));
+                }
             }
             else if (length == probeBlock.getPositionCount()) {
                 // probeIndices are a simple covering of the block
@@ -115,7 +123,14 @@ public class LookupJoinPageBuilder
             else {
                 // probeIndices are sequential without holes
                 verify(probeIndices[length - 1] - probeIndices[0] == length - 1);
-                blocks[i] = probeBlock.getRegion(probeIndices[0], length);
+                if (probeBlock.isLoaded()) {
+                    blocks[i] = probeBlock.getRegion(probeIndices[0], length);
+                }
+                else {
+                    blocks[i] = new LazyBlock(
+                            length,
+                            lazyBlock -> lazyBlock.setBlock(probeBlock.getRegion(probeIndices[0], length)));
+                }
             }
         }
 
