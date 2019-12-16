@@ -478,4 +478,6 @@ public interface Metadata
     ColumnPropertyManager getColumnPropertyManager();
 
     AnalyzePropertyManager getAnalyzePropertyManager();
+
+    NameCanonicalizer getNameCanonicalizer(Session session, String catalogName);
 }
