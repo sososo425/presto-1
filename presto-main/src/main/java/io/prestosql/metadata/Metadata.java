@@ -67,8 +67,6 @@ public interface Metadata
 {
     Set<ConnectorCapabilities> getConnectorCapabilities(Session session, CatalogName catalogName);
 
-    boolean catalogExists(Session session, String catalogName);
-
     boolean schemaExists(Session session, CatalogSchemaName schema);
 
     List<String> listSchemaNames(Session session, String catalogName);
