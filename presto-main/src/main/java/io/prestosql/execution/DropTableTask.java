@@ -29,6 +29,7 @@ import java.util.Optional;
 
 import static com.google.common.util.concurrent.Futures.immediateFuture;
 import static io.prestosql.metadata.MetadataUtil.createQualifiedObjectName;
+import static io.prestosql.metadata.MetadataUtil.getNameCanonicalizer;
 import static io.prestosql.spi.StandardErrorCode.TABLE_NOT_FOUND;
 import static io.prestosql.sql.analyzer.SemanticExceptions.semanticException;
 
@@ -48,13 +49,14 @@ public class DropTableTask
         QualifiedObjectNamePart tableNamePart = createQualifiedObjectName(session, statement, statement.getTableName());
 
         Optional<TableHandle> tableHandle = metadata.getTableHandle(session, tableNamePart);
-        QualifiedObjectName tableName = tableNamePart.asQualifiedObjectName();
         if (!tableHandle.isPresent()) {
             if (!statement.isExists()) {
-                throw semanticException(TABLE_NOT_FOUND, statement, "Table '%s' does not exist", tableName);
+                throw semanticException(TABLE_NOT_FOUND, statement, "Table '%s' does not exist", metadata.getNameCanonicalizer(session, tableNamePart.getLegacyCatalogName()).canonicalizeName(tableNamePart.getObjectName().getValue(), tableNamePart.getObjectName().getDelimited()));
             }
             return immediateFuture(null);
         }
+
+        QualifiedObjectName tableName = tableNamePart.asQualifiedObjectName(getNameCanonicalizer(metadata, session, tableHandle.get().getCatalogName()));
 
         accessControl.checkCanDropTable(session.toSecurityContext(), tableName);
 

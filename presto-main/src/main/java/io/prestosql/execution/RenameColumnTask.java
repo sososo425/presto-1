@@ -30,6 +30,7 @@ import java.util.Map;
 
 import static com.google.common.util.concurrent.Futures.immediateFuture;
 import static io.prestosql.metadata.MetadataUtil.createQualifiedObjectName;
+import static io.prestosql.metadata.MetadataUtil.getNameCanonicalizer;
 import static io.prestosql.spi.StandardErrorCode.COLUMN_ALREADY_EXISTS;
 import static io.prestosql.spi.StandardErrorCode.COLUMN_NOT_FOUND;
 import static io.prestosql.spi.StandardErrorCode.NOT_SUPPORTED;
@@ -53,7 +54,7 @@ public class RenameColumnTask
         QualifiedObjectNamePart tableNamePart = createQualifiedObjectName(session, statement, statement.getTable());
         TableHandle tableHandle = metadata.getTableHandle(session, tableNamePart)
                 .orElseThrow(() -> semanticException(TABLE_NOT_FOUND, statement, "Table '%s' does not exist", tableNamePart));
-        QualifiedObjectName tableName = tableNamePart.asQualifiedObjectName();
+        QualifiedObjectName tableName = tableNamePart.asQualifiedObjectName(getNameCanonicalizer(metadata, session, tableHandle.getCatalogName()));
 
         String source = statement.getSource().getValue().toLowerCase(ENGLISH);
         String target = statement.getTarget().getValue().toLowerCase(ENGLISH);

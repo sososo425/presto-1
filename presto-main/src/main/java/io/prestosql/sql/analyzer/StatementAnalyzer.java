@@ -170,7 +170,9 @@ import static com.google.common.collect.Iterables.getLast;
 import static io.prestosql.SystemSessionProperties.getMaxGroupingSets;
 import static io.prestosql.metadata.FunctionKind.AGGREGATE;
 import static io.prestosql.metadata.FunctionKind.WINDOW;
+import static io.prestosql.metadata.MetadataUtil.canonicalizeObject;
 import static io.prestosql.metadata.MetadataUtil.createQualifiedObjectName;
+import static io.prestosql.metadata.MetadataUtil.getNameCanonicalizer;
 import static io.prestosql.spi.StandardErrorCode.AMBIGUOUS_NAME;
 import static io.prestosql.spi.StandardErrorCode.CATALOG_NOT_FOUND;
 import static io.prestosql.spi.StandardErrorCode.COLUMN_NOT_FOUND;
@@ -320,10 +322,10 @@ class StatementAnalyzer
         protected Scope visitInsert(Insert insert, Optional<Scope> scope)
         {
             QualifiedObjectNamePart targetTableNamePart = createQualifiedObjectName(session, insert, insert.getTarget());
-            QualifiedObjectName targetTable = targetTableNamePart.asQualifiedObjectName();
             if (metadata.getView(session, targetTableNamePart).isPresent()) {
                 throw semanticException(NOT_SUPPORTED, insert, "Inserting into views is not supported");
             }
+            QualifiedObjectName targetTable = targetTableNamePart.asQualifiedObjectName(metadata.getNameCanonicalizer(session, targetTableNamePart.getLegacyCatalogName()));
 
             // analyze the query that creates the data
             Scope queryScope = analyze(insert.getQuery(), createScope(scope));
@@ -434,7 +436,7 @@ class StatementAnalyzer
 
             analysis.setUpdateType("DELETE");
 
-            accessControl.checkCanDeleteFromTable(session.toSecurityContext(), tableNamePart.asQualifiedObjectName());
+            accessControl.checkCanDeleteFromTable(session.toSecurityContext(), tableNamePart.asQualifiedObjectName(metadata.getNameCanonicalizer(session, tableNamePart.getLegacyCatalogName())));
 
             return createAndAssignScope(node, scope, Field.newUnqualified("rows", BIGINT));
         }
@@ -444,7 +446,6 @@ class StatementAnalyzer
         {
             analysis.setUpdateType("ANALYZE");
             QualifiedObjectNamePart tableNamePart = createQualifiedObjectName(session, node, node.getTableName());
-            QualifiedObjectName tableName = tableNamePart.asQualifiedObjectName();
 
             // verify the target table exists and it's not a view
             if (metadata.getView(session, tableNamePart).isPresent()) {
@@ -452,8 +453,8 @@ class StatementAnalyzer
             }
 
             validateProperties(node.getProperties(), scope);
-            CatalogName catalogName = metadata.getCatalogHandle(session, tableName.getCatalogName())
-                    .orElseThrow(() -> new PrestoException(NOT_FOUND, "Catalog not found: " + tableName.getCatalogName()));
+            CatalogName catalogName = metadata.getCatalogHandle(session, tableNamePart.getLegacyCatalogName())
+                    .orElseThrow(() -> new PrestoException(NOT_FOUND, "Catalog not found: " + tableNamePart.getLegacyCatalogName()));
 
             Map<String, Object> analyzeProperties = metadata.getAnalyzePropertyManager().getProperties(
                     catalogName,
@@ -463,7 +464,9 @@ class StatementAnalyzer
                     metadata,
                     analysis.getParameters());
             TableHandle tableHandle = metadata.getTableHandleForStatisticsCollection(session, tableNamePart, analyzeProperties)
-                    .orElseThrow(() -> semanticException(TABLE_NOT_FOUND, node, "Table '%s' does not exist", tableName));
+                    .orElseThrow(() -> semanticException(TABLE_NOT_FOUND, node, "Table '%s' does not exist", canonicalizeObject(metadata, session, tableNamePart)));
+
+            QualifiedObjectName tableName = tableNamePart.asQualifiedObjectName(getNameCanonicalizer(metadata, session, tableHandle.getCatalogName()));
 
             // user must have read and insert permission in order to analyze stats of a table
             analysis.addTableColumnReferences(
@@ -490,7 +493,7 @@ class StatementAnalyzer
 
             // turn this into a query that has a new table writer node on top.
             QualifiedObjectNamePart targetTableNamePart = createQualifiedObjectName(session, node, node.getName());
-            QualifiedObjectName targetTable = targetTableNamePart.asQualifiedObjectName();
+            QualifiedObjectName targetTable = targetTableNamePart.asQualifiedObjectName(metadata.getNameCanonicalizer(session, targetTableNamePart.getLegacyCatalogName()));
             Optional<TableHandle> targetTableHandle = metadata.getTableHandle(session, targetTableNamePart);
             if (targetTableHandle.isPresent()) {
                 if (node.isNotExists()) {
@@ -583,7 +586,7 @@ class StatementAnalyzer
 
             Scope queryScope = analyzer.analyze(node.getQuery(), scope);
 
-            accessControl.checkCanCreateView(session.toSecurityContext(), viewNamePart.asQualifiedObjectName());
+            accessControl.checkCanCreateView(session.toSecurityContext(), viewNamePart.asQualifiedObjectName(metadata.getNameCanonicalizer(session, viewNamePart.getLegacyCatalogName())));
 
             validateColumns(node, queryScope.getRelationType());
 
@@ -904,7 +907,7 @@ class StatementAnalyzer
             }
 
             QualifiedObjectNamePart namePart = createQualifiedObjectName(session, table, table.getName());
-            QualifiedObjectName name = namePart.asQualifiedObjectName();
+            QualifiedObjectName name = namePart.asQualifiedObjectName(metadata.getNameCanonicalizer(session, namePart.getLegacyCatalogName()));
             analysis.addEmptyColumnReferencesForTable(accessControl, session.getIdentity(), name);
 
             // is this a reference to a view?
@@ -923,6 +926,8 @@ class StatementAnalyzer
                 }
                 throw semanticException(TABLE_NOT_FOUND, table, "Table %s does not exist", name);
             }
+
+
             TableMetadata tableMetadata = metadata.getTableMetadata(session, tableHandle.get());
             Map<String, ColumnHandle> columnHandles = metadata.getColumnHandles(session, tableHandle.get());
 
@@ -1001,7 +1006,7 @@ class StatementAnalyzer
             if (statement instanceof CreateView) {
                 CreateView viewStatement = (CreateView) statement;
                 QualifiedObjectNamePart viewNameFromStatement = createQualifiedObjectName(session, viewStatement, viewStatement.getName());
-                if (viewStatement.isReplace() && viewNameFromStatement.asQualifiedObjectName().equals(name)) {
+                if (viewStatement.isReplace() && viewNameFromStatement.asQualifiedObjectName(metadata.getNameCanonicalizer(session, viewNameFromStatement.getLegacyCatalogName())).equals(name)) {
                     throw semanticException(VIEW_IS_RECURSIVE, table, "Statement would create a recursive view");
                 }
             }

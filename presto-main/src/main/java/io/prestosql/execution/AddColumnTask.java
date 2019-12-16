@@ -37,6 +37,7 @@ import java.util.Optional;
 
 import static com.google.common.util.concurrent.Futures.immediateFuture;
 import static io.prestosql.metadata.MetadataUtil.createQualifiedObjectName;
+import static io.prestosql.metadata.MetadataUtil.getNameCanonicalizer;
 import static io.prestosql.spi.StandardErrorCode.COLUMN_ALREADY_EXISTS;
 import static io.prestosql.spi.StandardErrorCode.COLUMN_TYPE_UNKNOWN;
 import static io.prestosql.spi.StandardErrorCode.NOT_FOUND;
@@ -73,7 +74,7 @@ public class AddColumnTask
         CatalogName catalogName = metadata.getCatalogHandle(session, tableNamePart.getLegacyCatalogName())
                 .orElseThrow(() -> new PrestoException(NOT_FOUND, "Catalog does not exist: " + tableNamePart.getLegacyCatalogName()));
 
-        QualifiedObjectName tableName = tableNamePart.asQualifiedObjectName();
+        QualifiedObjectName tableName = tableNamePart.asQualifiedObjectName(getNameCanonicalizer(metadata, session, catalogName));
 
         accessControl.checkCanAddColumns(session.toSecurityContext(), tableName);
 

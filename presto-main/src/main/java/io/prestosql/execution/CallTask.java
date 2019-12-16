@@ -80,7 +80,7 @@ public class CallTask
         CatalogName catalogName = metadata.getCatalogHandle(stateMachine.getSession(), procedureNamePart.getLegacyCatalogName())
                 .orElseThrow(() -> semanticException(CATALOG_NOT_FOUND, call, "Catalog %s does not exist", procedureNamePart.getLegacyCatalogName()));
 
-        QualifiedObjectName procedureName = procedureNamePart.asQualifiedObjectName();
+        QualifiedObjectName procedureName = procedureNamePart.asQualifiedObjectName(metadata.getNameCanonicalizer(session, catalogName.getCatalogName()));
 
         Procedure procedure = metadata.getProcedureRegistry().resolve(catalogName, procedureName.asSchemaTableName());
 

@@ -28,7 +28,9 @@ import java.util.List;
 import java.util.Optional;
 
 import static com.google.common.util.concurrent.Futures.immediateFuture;
+import static io.prestosql.metadata.MetadataUtil.canonicalizeObject;
 import static io.prestosql.metadata.MetadataUtil.createQualifiedObjectName;
+import static io.prestosql.metadata.MetadataUtil.getNameCanonicalizer;
 import static io.prestosql.spi.StandardErrorCode.CATALOG_NOT_FOUND;
 import static io.prestosql.spi.StandardErrorCode.NOT_SUPPORTED;
 import static io.prestosql.spi.StandardErrorCode.TABLE_ALREADY_EXISTS;
@@ -50,14 +52,15 @@ public class RenameTableTask
         Session session = stateMachine.getSession();
         QualifiedObjectNamePart tableNamePart = createQualifiedObjectName(session, statement, statement.getSource());
         Optional<TableHandle> tableHandle = metadata.getTableHandle(session, tableNamePart);
-        QualifiedObjectName tableName = tableNamePart.asQualifiedObjectName();
 
         if (!tableHandle.isPresent()) {
-            throw semanticException(TABLE_NOT_FOUND, statement, "Table '%s' does not exist", tableName);
+            throw semanticException(TABLE_NOT_FOUND, statement, "Table '%s' does not exist", canonicalizeObject(metadata, session, tableNamePart));
         }
 
+        QualifiedObjectName tableName = tableNamePart.asQualifiedObjectName(getNameCanonicalizer(metadata, session, tableHandle.get().getCatalogName()));
+
         QualifiedObjectNamePart targetNamePart = createQualifiedObjectName(session, statement, statement.getTarget());
-        QualifiedObjectName target = targetNamePart.asQualifiedObjectName();
+        QualifiedObjectName target = targetNamePart.asQualifiedObjectName(metadata.getNameCanonicalizer(session, targetNamePart.getLegacyCatalogName()));
         if (!metadata.getCatalogHandle(session, target.getCatalogName()).isPresent()) {
             throw semanticException(CATALOG_NOT_FOUND, statement, "Target catalog '%s' does not exist", target.getCatalogName());
         }

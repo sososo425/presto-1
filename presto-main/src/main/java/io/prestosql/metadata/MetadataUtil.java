@@ -17,6 +17,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import io.prestosql.Session;
+import io.prestosql.connector.CatalogName;
 import io.prestosql.spi.PrestoException;
 import io.prestosql.spi.connector.CatalogSchemaName;
 import io.prestosql.spi.connector.ColumnMetadata;
@@ -193,6 +194,16 @@ public final class MetadataUtil
         }
         QualifiedObjectNamePart name = new QualifiedObjectNamePart(session.getCatalog().map(NamePart::createDefaultNamePart).get(), session.getSchema().map(NamePart::createDefaultNamePart).get(), createDefaultNamePart(table));
         return metadata.getTableHandle(session, name).isPresent();
+    }
+
+    public static NameCanonicalizer getNameCanonicalizer(Metadata metadata, Session session, CatalogName catalogName)
+    {
+        return metadata.getNameCanonicalizer(session, catalogName.getCatalogName());
+    }
+
+    public static String canonicalizeObject(Metadata metadata, Session session, QualifiedObjectNamePart objectName)
+    {
+        return metadata.getNameCanonicalizer(session, objectName.getLegacyCatalogName()).canonicalizeName(objectName.getObjectName().getValue(), objectName.getObjectName().getDelimited());
     }
 
     public static class SchemaMetadataBuilder

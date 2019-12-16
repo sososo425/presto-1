@@ -62,7 +62,7 @@ public final class MetadataListing
     public static Set<SchemaTableName> listTables(Session session, Metadata metadata, AccessControl accessControl, QualifiedTablePrefix prefix)
     {
         Set<SchemaTableName> tableNames = metadata.listTables(session, prefix).stream()
-                .map(QualifiedObjectName::asSchemaTableName)
+                .map(qualifiedObjectName -> qualifiedObjectName.asSchemaTableName())
                 .collect(toImmutableSet());
         return accessControl.filterTables(session.toSecurityContext(), prefix.getCatalogName(), tableNames);
     }
@@ -70,7 +70,7 @@ public final class MetadataListing
     public static Set<SchemaTableName> listViews(Session session, Metadata metadata, AccessControl accessControl, QualifiedTablePrefix prefix)
     {
         Set<SchemaTableName> tableNames = metadata.listViews(session, prefix).stream()
-                .map(QualifiedObjectName::asSchemaTableName)
+                .map(qualifiedObjectName -> qualifiedObjectName.asSchemaTableName())
                 .collect(toImmutableSet());
         return accessControl.filterTables(session.toSecurityContext(), prefix.getCatalogName(), tableNames);
     }

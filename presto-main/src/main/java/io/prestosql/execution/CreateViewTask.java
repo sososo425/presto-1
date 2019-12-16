@@ -73,7 +73,8 @@ public class CreateViewTask
     {
         Session session = stateMachine.getSession();
         QualifiedObjectNamePart viewNamePart = createQualifiedObjectName(session, statement, statement.getName());
-        QualifiedObjectName name = viewNamePart.asQualifiedObjectName();
+
+        QualifiedObjectName name = viewNamePart.asQualifiedObjectName(metadata.getNameCanonicalizer(session, viewNamePart.getLegacyCatalogName()));
 
         accessControl.checkCanCreateView(session.toSecurityContext(), name);
 

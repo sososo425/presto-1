@@ -25,6 +25,7 @@ import java.util.Set;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.collect.Sets.immutableEnumSet;
+import static io.prestosql.metadata.NameCanonicalizer.LEGACY_NAME_CANONICALIZER;
 import static java.util.Objects.requireNonNull;
 
 public class CatalogMetadata
@@ -108,11 +109,11 @@ public class CatalogMetadata
 
     public CatalogName getConnectorId(Session session, QualifiedObjectNamePart table)
     {
-        if (table.asQualifiedObjectName().getSchemaName().equals(INFORMATION_SCHEMA_NAME)) {
+        if (table.asQualifiedObjectName(LEGACY_NAME_CANONICALIZER).getSchemaName().equals(INFORMATION_SCHEMA_NAME)) {
             return informationSchemaId;
         }
 
-        if (systemTables.getTableHandle(session.toConnectorSession(systemTablesId), table.asQualifiedObjectName().asSchemaTableName()) != null) {
+        if (systemTables.getTableHandle(session.toConnectorSession(systemTablesId), table.asQualifiedObjectName((name, delimited) -> systemTables.canonicalize(session.toConnectorSession(systemTablesId), name, delimited)).asSchemaTableName()) != null) {
             return systemTablesId;
         }
 

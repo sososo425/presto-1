@@ -29,6 +29,7 @@ import java.util.List;
 
 import static com.google.common.util.concurrent.Futures.immediateFuture;
 import static io.prestosql.metadata.MetadataUtil.createQualifiedObjectName;
+import static io.prestosql.metadata.MetadataUtil.getNameCanonicalizer;
 import static io.prestosql.spi.StandardErrorCode.COLUMN_NOT_FOUND;
 import static io.prestosql.spi.StandardErrorCode.NOT_SUPPORTED;
 import static io.prestosql.spi.StandardErrorCode.TABLE_NOT_FOUND;
@@ -52,7 +53,7 @@ public class DropColumnTask
         TableHandle tableHandle = metadata.getTableHandle(session, tableNamePart)
                 .orElseThrow(() -> semanticException(TABLE_NOT_FOUND, statement, "Table '%s' does not exist", tableNamePart));
 
-        QualifiedObjectName tableName = tableNamePart.asQualifiedObjectName();
+        QualifiedObjectName tableName = tableNamePart.asQualifiedObjectName(getNameCanonicalizer(metadata, session, tableHandle.getCatalogName()));
         String column = statement.getColumn().getValue().toLowerCase(ENGLISH);
 
         accessControl.checkCanDropColumn(session.toSecurityContext(), tableName);

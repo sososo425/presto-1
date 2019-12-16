@@ -15,6 +15,7 @@ package io.prestosql.metadata;
 
 import javax.annotation.concurrent.Immutable;
 
+import static io.prestosql.metadata.NameCanonicalizer.LEGACY_NAME_CANONICALIZER;
 import static io.prestosql.metadata.NamePart.createDefaultNamePart;
 import static java.util.Locale.ENGLISH;
 import static java.util.Objects.requireNonNull;
@@ -64,5 +65,13 @@ public class QualifiedObjectNamePart
     public QualifiedObjectName asQualifiedObjectName()
     {
         return new QualifiedObjectName(catalogName.getValue().toLowerCase(ENGLISH), schemaName.getValue().toLowerCase(ENGLISH), objectName.getValue().toLowerCase(ENGLISH));
+    }
+
+    public QualifiedObjectName asQualifiedObjectName(NameCanonicalizer nameCanonicalizer)
+    {
+        return new QualifiedObjectName(
+                LEGACY_NAME_CANONICALIZER.canonicalizeName(catalogName.getValue(), catalogName.getDelimited()),
+                nameCanonicalizer.canonicalizeName(schemaName.getValue(), schemaName.getDelimited()),
+                nameCanonicalizer.canonicalizeName(objectName.getValue(), objectName.getDelimited()));
     }
 }

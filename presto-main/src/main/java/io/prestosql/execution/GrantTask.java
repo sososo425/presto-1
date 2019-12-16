@@ -34,6 +34,7 @@ import static com.google.common.collect.ImmutableSet.toImmutableSet;
 import static com.google.common.util.concurrent.Futures.immediateFuture;
 import static io.prestosql.metadata.MetadataUtil.createPrincipal;
 import static io.prestosql.metadata.MetadataUtil.createQualifiedObjectName;
+import static io.prestosql.metadata.MetadataUtil.getNameCanonicalizer;
 import static io.prestosql.spi.StandardErrorCode.INVALID_PRIVILEGE;
 import static io.prestosql.spi.StandardErrorCode.TABLE_NOT_FOUND;
 import static io.prestosql.sql.analyzer.SemanticExceptions.semanticException;
@@ -53,10 +54,11 @@ public class GrantTask
         Session session = stateMachine.getSession();
         QualifiedObjectNamePart tableNamePart = createQualifiedObjectName(session, statement, statement.getTableName());
         Optional<TableHandle> tableHandle = metadata.getTableHandle(session, tableNamePart);
-        QualifiedObjectName tableName = tableNamePart.asQualifiedObjectName();
         if (!tableHandle.isPresent()) {
-            throw semanticException(TABLE_NOT_FOUND, statement, "Table '%s' does not exist", tableName);
+            throw semanticException(TABLE_NOT_FOUND, statement, "Table '%s' does not exist", metadata.getNameCanonicalizer(session, tableNamePart.getLegacyCatalogName()).canonicalizeName(tableNamePart.getObjectName().getValue(), tableNamePart.getObjectName().getDelimited()));
         }
+
+        QualifiedObjectName tableName = tableNamePart.asQualifiedObjectName(getNameCanonicalizer(metadata, session, tableHandle.get().getCatalogName()));
 
         Set<Privilege> privileges;
         if (statement.getPrivileges().isPresent()) {

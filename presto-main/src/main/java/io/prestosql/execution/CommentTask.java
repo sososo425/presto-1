@@ -29,6 +29,7 @@ import java.util.Optional;
 
 import static com.google.common.util.concurrent.Futures.immediateFuture;
 import static io.prestosql.metadata.MetadataUtil.createQualifiedObjectName;
+import static io.prestosql.metadata.MetadataUtil.getNameCanonicalizer;
 import static io.prestosql.spi.StandardErrorCode.NOT_SUPPORTED;
 import static io.prestosql.spi.StandardErrorCode.TABLE_NOT_FOUND;
 import static io.prestosql.sql.analyzer.SemanticExceptions.semanticException;
@@ -54,7 +55,7 @@ public class CommentTask
                 throw semanticException(TABLE_NOT_FOUND, statement, "Table does not exist: " + tableName.asQualifiedObjectName());
             }
 
-            accessControl.checkCanSetTableComment(session.toSecurityContext(), tableName.asQualifiedObjectName());
+            accessControl.checkCanSetTableComment(session.toSecurityContext(), tableName.asQualifiedObjectName(getNameCanonicalizer(metadata, session, tableHandle.get().getCatalogName())));
 
             metadata.setTableComment(session, tableHandle.get(), statement.getComment());
         }

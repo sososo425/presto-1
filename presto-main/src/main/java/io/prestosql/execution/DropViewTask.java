@@ -29,6 +29,7 @@ import java.util.Optional;
 
 import static com.google.common.util.concurrent.Futures.immediateFuture;
 import static io.prestosql.metadata.MetadataUtil.createQualifiedObjectName;
+import static io.prestosql.metadata.MetadataUtil.getNameCanonicalizer;
 import static io.prestosql.spi.StandardErrorCode.TABLE_NOT_FOUND;
 import static io.prestosql.sql.analyzer.SemanticExceptions.semanticException;
 
@@ -48,7 +49,7 @@ public class DropViewTask
         QualifiedObjectNamePart viewNamePart = createQualifiedObjectName(session, statement, statement.getName());
 
         Optional<ConnectorViewDefinition> view = metadata.getView(session, viewNamePart);
-        QualifiedObjectName name = viewNamePart.asQualifiedObjectName();
+        QualifiedObjectName name = viewNamePart.asQualifiedObjectName(metadata.getNameCanonicalizer(session, viewNamePart.getLegacyCatalogName()));
         if (!view.isPresent()) {
             if (!statement.isExists()) {
                 throw semanticException(TABLE_NOT_FOUND, statement, "View '%s' does not exist", name);

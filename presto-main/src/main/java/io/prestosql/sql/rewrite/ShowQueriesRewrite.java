@@ -224,7 +224,7 @@ final class ShowQueriesRewrite
             Optional<QualifiedName> tableName = showGrants.getTableName();
             if (tableName.isPresent()) {
                 QualifiedObjectNamePart qualifiedTableNamePart = createQualifiedObjectName(session, showGrants, tableName.get());
-                QualifiedObjectName qualifiedTableName = qualifiedTableNamePart.asQualifiedObjectName();
+                QualifiedObjectName qualifiedTableName = qualifiedTableNamePart.asQualifiedObjectName(metadata.getNameCanonicalizer(session, qualifiedTableNamePart.getLegacyCatalogName()));
 
                 if (!metadata.getView(session, qualifiedTableNamePart).isPresent() &&
                         !metadata.getTableHandle(session, qualifiedTableNamePart).isPresent()) {
@@ -367,7 +367,7 @@ final class ShowQueriesRewrite
         protected Node visitShowColumns(ShowColumns showColumns, Void context)
         {
             QualifiedObjectNamePart tableNamePart = createQualifiedObjectName(session, showColumns, showColumns.getTable());
-            QualifiedObjectName tableName = tableNamePart.asQualifiedObjectName();
+            QualifiedObjectName tableName = tableNamePart.asQualifiedObjectName(metadata.getNameCanonicalizer(session, tableNamePart.getLegacyCatalogName()));
             if (!metadata.getView(session, tableNamePart).isPresent() &&
                     !metadata.getTableHandle(session, tableNamePart).isPresent()) {
                 throw semanticException(TABLE_NOT_FOUND, showColumns, "Table '%s' does not exist", tableName);
@@ -427,7 +427,7 @@ final class ShowQueriesRewrite
         protected Node visitShowCreate(ShowCreate node, Void context)
         {
             QualifiedObjectNamePart objectNamePart = createQualifiedObjectName(session, node, node.getName());
-            QualifiedObjectName objectName = objectNamePart.asQualifiedObjectName();
+            QualifiedObjectName objectName = objectNamePart.asQualifiedObjectName(metadata.getNameCanonicalizer(session, objectNamePart.getLegacyCatalogName()));
             Optional<ConnectorViewDefinition> viewDefinition = metadata.getView(session, objectNamePart);
 
             if (node.getType() == VIEW) {
