@@ -26,6 +26,7 @@ import io.prestosql.metadata.FunctionKind;
 import io.prestosql.metadata.FunctionMetadata;
 import io.prestosql.metadata.Metadata;
 import io.prestosql.metadata.QualifiedObjectName;
+import io.prestosql.metadata.QualifiedObjectNamePart;
 import io.prestosql.metadata.SessionPropertyManager.SessionPropertyValue;
 import io.prestosql.metadata.TableHandle;
 import io.prestosql.security.AccessControl;
@@ -222,10 +223,11 @@ final class ShowQueriesRewrite
 
             Optional<QualifiedName> tableName = showGrants.getTableName();
             if (tableName.isPresent()) {
-                QualifiedObjectName qualifiedTableName = createQualifiedObjectName(session, showGrants, tableName.get());
+                QualifiedObjectNamePart qualifiedTableNamePart = createQualifiedObjectName(session, showGrants, tableName.get());
+                QualifiedObjectName qualifiedTableName = qualifiedTableNamePart.asQualifiedObjectName();
 
-                if (!metadata.getView(session, qualifiedTableName).isPresent() &&
-                        !metadata.getTableHandle(session, qualifiedTableName).isPresent()) {
+                if (!metadata.getView(session, qualifiedTableNamePart).isPresent() &&
+                        !metadata.getTableHandle(session, qualifiedTableNamePart).isPresent()) {
                     throw semanticException(TABLE_NOT_FOUND, showGrants, "Table '%s' does not exist", tableName);
                 }
 
@@ -364,10 +366,10 @@ final class ShowQueriesRewrite
         @Override
         protected Node visitShowColumns(ShowColumns showColumns, Void context)
         {
-            QualifiedObjectName tableName = createQualifiedObjectName(session, showColumns, showColumns.getTable());
-
-            if (!metadata.getView(session, tableName).isPresent() &&
-                    !metadata.getTableHandle(session, tableName).isPresent()) {
+            QualifiedObjectNamePart tableNamePart = createQualifiedObjectName(session, showColumns, showColumns.getTable());
+            QualifiedObjectName tableName = tableNamePart.asQualifiedObjectName();
+            if (!metadata.getView(session, tableNamePart).isPresent() &&
+                    !metadata.getTableHandle(session, tableNamePart).isPresent()) {
                 throw semanticException(TABLE_NOT_FOUND, showColumns, "Table '%s' does not exist", tableName);
             }
 
@@ -424,12 +426,13 @@ final class ShowQueriesRewrite
         @Override
         protected Node visitShowCreate(ShowCreate node, Void context)
         {
-            QualifiedObjectName objectName = createQualifiedObjectName(session, node, node.getName());
-            Optional<ConnectorViewDefinition> viewDefinition = metadata.getView(session, objectName);
+            QualifiedObjectNamePart objectNamePart = createQualifiedObjectName(session, node, node.getName());
+            QualifiedObjectName objectName = objectNamePart.asQualifiedObjectName();
+            Optional<ConnectorViewDefinition> viewDefinition = metadata.getView(session, objectNamePart);
 
             if (node.getType() == VIEW) {
                 if (!viewDefinition.isPresent()) {
-                    if (metadata.getTableHandle(session, objectName).isPresent()) {
+                    if (metadata.getTableHandle(session, objectNamePart).isPresent()) {
                         throw semanticException(NOT_SUPPORTED, node, "Relation '%s' is a table, not a view", objectName);
                     }
                     throw semanticException(TABLE_NOT_FOUND, node, "View '%s' does not exist", objectName);
@@ -452,7 +455,7 @@ final class ShowQueriesRewrite
                     throw semanticException(NOT_SUPPORTED, node, "Relation '%s' is a view, not a table", objectName);
                 }
 
-                Optional<TableHandle> tableHandle = metadata.getTableHandle(session, objectName);
+                Optional<TableHandle> tableHandle = metadata.getTableHandle(session, objectNamePart);
                 if (!tableHandle.isPresent()) {
                     throw semanticException(TABLE_NOT_FOUND, node, "Table '%s' does not exist", objectName);
                 }

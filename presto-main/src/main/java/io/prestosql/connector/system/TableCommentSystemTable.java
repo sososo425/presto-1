@@ -43,6 +43,7 @@ import static io.prestosql.connector.system.jdbc.FilterUtil.tablePrefix;
 import static io.prestosql.metadata.MetadataListing.listCatalogs;
 import static io.prestosql.metadata.MetadataListing.listTables;
 import static io.prestosql.metadata.MetadataUtil.TableMetadataBuilder.tableMetadataBuilder;
+import static io.prestosql.metadata.QualifiedObjectNamePart.fromQualifiedObjectName;
 import static io.prestosql.spi.connector.SystemTable.Distribution.SINGLE_COORDINATOR;
 import static io.prestosql.spi.type.VarcharType.createUnboundedVarcharType;
 import static java.util.Objects.requireNonNull;
@@ -109,7 +110,7 @@ public class TableCommentSystemTable
                 QualifiedObjectName tableName = new QualifiedObjectName(prefix.getCatalogName(), name.getSchemaName(), name.getTableName());
                 Optional<String> comment = Optional.empty();
                 try {
-                    comment = metadata.getTableHandle(session, tableName)
+                    comment = metadata.getTableHandle(session, fromQualifiedObjectName(tableName))
                             .map(handle -> metadata.getTableMetadata(session, handle))
                             .map(metadata -> metadata.getMetadata().getComment())
                             .get();

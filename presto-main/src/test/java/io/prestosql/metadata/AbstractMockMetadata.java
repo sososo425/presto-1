@@ -100,19 +100,19 @@ public abstract class AbstractMockMetadata
     }
 
     @Override
-    public Optional<TableHandle> getTableHandle(Session session, QualifiedObjectName tableName)
+    public Optional<TableHandle> getTableHandle(Session session, QualifiedObjectNamePart tableName)
     {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public Optional<TableHandle> getTableHandleForStatisticsCollection(Session session, QualifiedObjectName tableName, Map<String, Object> analyzeProperties)
+    public Optional<TableHandle> getTableHandleForStatisticsCollection(Session session, QualifiedObjectNamePart tableName, Map<String, Object> analyzeProperties)
     {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public Optional<SystemTable> getSystemTable(Session session, QualifiedObjectName tableName)
+    public Optional<SystemTable> getSystemTable(Session session, QualifiedObjectNamePart tableName)
     {
         throw new UnsupportedOperationException();
     }
@@ -208,7 +208,7 @@ public abstract class AbstractMockMetadata
     }
 
     @Override
-    public void renameTable(Session session, TableHandle tableHandle, QualifiedObjectName newTableName)
+    public void renameTable(Session session, TableHandle tableHandle, QualifiedObjectNamePart newTableName)
     {
         throw new UnsupportedOperationException();
     }
@@ -370,25 +370,25 @@ public abstract class AbstractMockMetadata
     }
 
     @Override
-    public Optional<ConnectorViewDefinition> getView(Session session, QualifiedObjectName viewName)
+    public Optional<ConnectorViewDefinition> getView(Session session, QualifiedObjectNamePart viewName)
     {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void createView(Session session, QualifiedObjectName viewName, ConnectorViewDefinition definition, boolean replace)
+    public void createView(Session session, QualifiedObjectNamePart viewName, ConnectorViewDefinition definition, boolean replace)
     {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void renameView(Session session, QualifiedObjectName source, QualifiedObjectName target)
+    public void renameView(Session session, QualifiedObjectNamePart source, QualifiedObjectNamePart target)
     {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void dropView(Session session, QualifiedObjectName viewName)
+    public void dropView(Session session, QualifiedObjectNamePart viewName)
     {
         throw new UnsupportedOperationException();
     }
@@ -476,13 +476,13 @@ public abstract class AbstractMockMetadata
     }
 
     @Override
-    public void grantTablePrivileges(Session session, QualifiedObjectName tableName, Set<Privilege> privileges, PrestoPrincipal grantee, boolean grantOption)
+    public void grantTablePrivileges(Session session, QualifiedObjectNamePart tableName, Set<Privilege> privileges, PrestoPrincipal grantee, boolean grantOption)
     {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void revokeTablePrivileges(Session session, QualifiedObjectName tableName, Set<Privilege> privileges, PrestoPrincipal grantee, boolean grantOption)
+    public void revokeTablePrivileges(Session session, QualifiedObjectNamePart tableName, Set<Privilege> privileges, PrestoPrincipal grantee, boolean grantOption)
     {
         throw new UnsupportedOperationException();
     }

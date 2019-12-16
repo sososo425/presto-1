@@ -18,6 +18,7 @@ import io.prestosql.Session;
 import io.prestosql.connector.CatalogName;
 import io.prestosql.metadata.Metadata;
 import io.prestosql.metadata.QualifiedObjectName;
+import io.prestosql.metadata.QualifiedObjectNamePart;
 import io.prestosql.metadata.TableHandle;
 import io.prestosql.security.AccessControl;
 import io.prestosql.spi.PrestoException;
@@ -63,14 +64,16 @@ public class AddColumnTask
     public ListenableFuture<?> execute(AddColumn statement, TransactionManager transactionManager, Metadata metadata, AccessControl accessControl, QueryStateMachine stateMachine, List<Expression> parameters)
     {
         Session session = stateMachine.getSession();
-        QualifiedObjectName tableName = createQualifiedObjectName(session, statement, statement.getName());
-        Optional<TableHandle> tableHandle = metadata.getTableHandle(session, tableName);
+        QualifiedObjectNamePart tableNamePart = createQualifiedObjectName(session, statement, statement.getName());
+        Optional<TableHandle> tableHandle = metadata.getTableHandle(session, tableNamePart);
         if (!tableHandle.isPresent()) {
-            throw semanticException(TABLE_NOT_FOUND, statement, "Table '%s' does not exist", tableName);
+            throw semanticException(TABLE_NOT_FOUND, statement, "Table '%s' does not exist", tableNamePart);
         }
 
-        CatalogName catalogName = metadata.getCatalogHandle(session, tableName.getCatalogName())
-                .orElseThrow(() -> new PrestoException(NOT_FOUND, "Catalog does not exist: " + tableName.getCatalogName()));
+        CatalogName catalogName = metadata.getCatalogHandle(session, tableNamePart.getLegacyCatalogName())
+                .orElseThrow(() -> new PrestoException(NOT_FOUND, "Catalog does not exist: " + tableNamePart.getLegacyCatalogName()));
+
+        QualifiedObjectName tableName = tableNamePart.asQualifiedObjectName();
 
         accessControl.checkCanAddColumns(session.toSecurityContext(), tableName);
 

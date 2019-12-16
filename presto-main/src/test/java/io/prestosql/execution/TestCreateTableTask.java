@@ -22,7 +22,7 @@ import io.prestosql.metadata.Catalog;
 import io.prestosql.metadata.CatalogManager;
 import io.prestosql.metadata.ColumnPropertyManager;
 import io.prestosql.metadata.MetadataManager;
-import io.prestosql.metadata.QualifiedObjectName;
+import io.prestosql.metadata.QualifiedObjectNamePart;
 import io.prestosql.metadata.TableHandle;
 import io.prestosql.metadata.TablePropertyManager;
 import io.prestosql.security.AllowAllAccessControl;
@@ -258,7 +258,7 @@ public class TestCreateTableTask
         }
 
         @Override
-        public Optional<TableHandle> getTableHandle(Session session, QualifiedObjectName tableName)
+        public Optional<TableHandle> getTableHandle(Session session, QualifiedObjectNamePart tableName)
         {
             return Optional.empty();
         }

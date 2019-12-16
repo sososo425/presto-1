@@ -17,6 +17,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import io.prestosql.Session;
 import io.prestosql.metadata.Metadata;
 import io.prestosql.metadata.QualifiedObjectName;
+import io.prestosql.metadata.QualifiedObjectNamePart;
 import io.prestosql.metadata.TableHandle;
 import io.prestosql.security.AccessControl;
 import io.prestosql.sql.tree.Expression;
@@ -47,17 +48,20 @@ public class RenameTableTask
     public ListenableFuture<?> execute(RenameTable statement, TransactionManager transactionManager, Metadata metadata, AccessControl accessControl, QueryStateMachine stateMachine, List<Expression> parameters)
     {
         Session session = stateMachine.getSession();
-        QualifiedObjectName tableName = createQualifiedObjectName(session, statement, statement.getSource());
-        Optional<TableHandle> tableHandle = metadata.getTableHandle(session, tableName);
+        QualifiedObjectNamePart tableNamePart = createQualifiedObjectName(session, statement, statement.getSource());
+        Optional<TableHandle> tableHandle = metadata.getTableHandle(session, tableNamePart);
+        QualifiedObjectName tableName = tableNamePart.asQualifiedObjectName();
+
         if (!tableHandle.isPresent()) {
             throw semanticException(TABLE_NOT_FOUND, statement, "Table '%s' does not exist", tableName);
         }
 
-        QualifiedObjectName target = createQualifiedObjectName(session, statement, statement.getTarget());
+        QualifiedObjectNamePart targetNamePart = createQualifiedObjectName(session, statement, statement.getTarget());
+        QualifiedObjectName target = targetNamePart.asQualifiedObjectName();
         if (!metadata.getCatalogHandle(session, target.getCatalogName()).isPresent()) {
             throw semanticException(CATALOG_NOT_FOUND, statement, "Target catalog '%s' does not exist", target.getCatalogName());
         }
-        if (metadata.getTableHandle(session, target).isPresent()) {
+        if (metadata.getTableHandle(session, tableNamePart).isPresent()) {
             throw semanticException(TABLE_ALREADY_EXISTS, statement, "Target table '%s' already exists", target);
         }
         if (!tableName.getCatalogName().equals(target.getCatalogName())) {
@@ -65,7 +69,7 @@ public class RenameTableTask
         }
         accessControl.checkCanRenameTable(session.toSecurityContext(), tableName, target);
 
-        metadata.renameTable(session, tableHandle.get(), target);
+        metadata.renameTable(session, tableHandle.get(), tableNamePart);
 
         return immediateFuture(null);
     }

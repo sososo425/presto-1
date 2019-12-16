@@ -16,7 +16,7 @@ package io.prestosql.execution;
 import com.google.common.util.concurrent.ListenableFuture;
 import io.prestosql.Session;
 import io.prestosql.metadata.Metadata;
-import io.prestosql.metadata.QualifiedObjectName;
+import io.prestosql.metadata.QualifiedObjectNamePart;
 import io.prestosql.metadata.TableHandle;
 import io.prestosql.security.AccessControl;
 import io.prestosql.spi.PrestoException;
@@ -48,13 +48,13 @@ public class CommentTask
         Session session = stateMachine.getSession();
 
         if (statement.getType() == Comment.Type.TABLE) {
-            QualifiedObjectName tableName = createQualifiedObjectName(session, statement, statement.getName());
+            QualifiedObjectNamePart tableName = createQualifiedObjectName(session, statement, statement.getName());
             Optional<TableHandle> tableHandle = metadata.getTableHandle(session, tableName);
             if (!tableHandle.isPresent()) {
-                throw semanticException(TABLE_NOT_FOUND, statement, "Table does not exist: " + tableName);
+                throw semanticException(TABLE_NOT_FOUND, statement, "Table does not exist: " + tableName.asQualifiedObjectName());
             }
 
-            accessControl.checkCanSetTableComment(session.toSecurityContext(), tableName);
+            accessControl.checkCanSetTableComment(session.toSecurityContext(), tableName.asQualifiedObjectName());
 
             metadata.setTableComment(session, tableHandle.get(), statement.getComment());
         }

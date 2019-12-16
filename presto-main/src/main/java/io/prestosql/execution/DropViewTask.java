@@ -17,6 +17,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import io.prestosql.Session;
 import io.prestosql.metadata.Metadata;
 import io.prestosql.metadata.QualifiedObjectName;
+import io.prestosql.metadata.QualifiedObjectNamePart;
 import io.prestosql.security.AccessControl;
 import io.prestosql.spi.connector.ConnectorViewDefinition;
 import io.prestosql.sql.tree.DropView;
@@ -44,9 +45,10 @@ public class DropViewTask
     public ListenableFuture<?> execute(DropView statement, TransactionManager transactionManager, Metadata metadata, AccessControl accessControl, QueryStateMachine stateMachine, List<Expression> parameters)
     {
         Session session = stateMachine.getSession();
-        QualifiedObjectName name = createQualifiedObjectName(session, statement, statement.getName());
+        QualifiedObjectNamePart viewNamePart = createQualifiedObjectName(session, statement, statement.getName());
 
-        Optional<ConnectorViewDefinition> view = metadata.getView(session, name);
+        Optional<ConnectorViewDefinition> view = metadata.getView(session, viewNamePart);
+        QualifiedObjectName name = viewNamePart.asQualifiedObjectName();
         if (!view.isPresent()) {
             if (!statement.isExists()) {
                 throw semanticException(TABLE_NOT_FOUND, statement, "View '%s' does not exist", name);
@@ -56,7 +58,7 @@ public class DropViewTask
 
         accessControl.checkCanDropView(session.toSecurityContext(), name);
 
-        metadata.dropView(session, name);
+        metadata.dropView(session, viewNamePart);
 
         return immediateFuture(null);
     }

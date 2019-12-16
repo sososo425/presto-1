@@ -18,6 +18,7 @@ import io.prestosql.Session;
 import io.prestosql.execution.warnings.WarningCollector;
 import io.prestosql.metadata.Metadata;
 import io.prestosql.metadata.QualifiedObjectName;
+import io.prestosql.metadata.QualifiedObjectNamePart;
 import io.prestosql.security.AccessControl;
 import io.prestosql.spi.connector.ConnectorViewDefinition;
 import io.prestosql.sql.analyzer.Analysis;
@@ -71,7 +72,8 @@ public class CreateViewTask
     public ListenableFuture<?> execute(CreateView statement, TransactionManager transactionManager, Metadata metadata, AccessControl accessControl, QueryStateMachine stateMachine, List<Expression> parameters)
     {
         Session session = stateMachine.getSession();
-        QualifiedObjectName name = createQualifiedObjectName(session, statement, statement.getName());
+        QualifiedObjectNamePart viewNamePart = createQualifiedObjectName(session, statement, statement.getName());
+        QualifiedObjectName name = viewNamePart.asQualifiedObjectName();
 
         accessControl.checkCanCreateView(session.toSecurityContext(), name);
 
@@ -98,7 +100,7 @@ public class CreateViewTask
                 owner,
                 !owner.isPresent());
 
-        metadata.createView(session, name, definition, statement.isReplace());
+        metadata.createView(session, viewNamePart, definition, statement.isReplace());
 
         return immediateFuture(null);
     }

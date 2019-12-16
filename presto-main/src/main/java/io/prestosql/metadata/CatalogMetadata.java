@@ -106,13 +106,13 @@ public class CatalogMetadata
         throw new IllegalArgumentException("Unknown connector id: " + catalogName);
     }
 
-    public CatalogName getConnectorId(Session session, QualifiedObjectName table)
+    public CatalogName getConnectorId(Session session, QualifiedObjectNamePart table)
     {
-        if (table.getSchemaName().equals(INFORMATION_SCHEMA_NAME)) {
+        if (table.asQualifiedObjectName().getSchemaName().equals(INFORMATION_SCHEMA_NAME)) {
             return informationSchemaId;
         }
 
-        if (systemTables.getTableHandle(session.toConnectorSession(systemTablesId), table.asSchemaTableName()) != null) {
+        if (systemTables.getTableHandle(session.toConnectorSession(systemTablesId), table.asQualifiedObjectName().asSchemaTableName()) != null) {
             return systemTablesId;
         }
 

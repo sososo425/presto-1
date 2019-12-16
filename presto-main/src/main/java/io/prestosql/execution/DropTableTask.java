@@ -17,6 +17,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import io.prestosql.Session;
 import io.prestosql.metadata.Metadata;
 import io.prestosql.metadata.QualifiedObjectName;
+import io.prestosql.metadata.QualifiedObjectNamePart;
 import io.prestosql.metadata.TableHandle;
 import io.prestosql.security.AccessControl;
 import io.prestosql.sql.tree.DropTable;
@@ -44,9 +45,10 @@ public class DropTableTask
     public ListenableFuture<?> execute(DropTable statement, TransactionManager transactionManager, Metadata metadata, AccessControl accessControl, QueryStateMachine stateMachine, List<Expression> parameters)
     {
         Session session = stateMachine.getSession();
-        QualifiedObjectName tableName = createQualifiedObjectName(session, statement, statement.getTableName());
+        QualifiedObjectNamePart tableNamePart = createQualifiedObjectName(session, statement, statement.getTableName());
 
-        Optional<TableHandle> tableHandle = metadata.getTableHandle(session, tableName);
+        Optional<TableHandle> tableHandle = metadata.getTableHandle(session, tableNamePart);
+        QualifiedObjectName tableName = tableNamePart.asQualifiedObjectName();
         if (!tableHandle.isPresent()) {
             if (!statement.isExists()) {
                 throw semanticException(TABLE_NOT_FOUND, statement, "Table '%s' does not exist", tableName);

@@ -78,6 +78,7 @@ import static io.airlift.concurrent.MoreFutures.getFutureValue;
 import static io.prestosql.SystemSessionProperties.getSpatialPartitioningTableName;
 import static io.prestosql.SystemSessionProperties.isSpatialJoinEnabled;
 import static io.prestosql.matching.Capture.newCapture;
+import static io.prestosql.metadata.QualifiedObjectNamePart.fromQualifiedObjectName;
 import static io.prestosql.spi.StandardErrorCode.INVALID_SPATIAL_PARTITIONING;
 import static io.prestosql.spi.connector.ConnectorSplitManager.SplitSchedulingStrategy.UNGROUPED_SCHEDULING;
 import static io.prestosql.spi.connector.NotPartitionedPartitionHandle.NOT_PARTITIONED;
@@ -452,7 +453,7 @@ public class ExtractSpatialJoins
     private static KdbTree loadKdbTree(String tableName, Session session, Metadata metadata, SplitManager splitManager, PageSourceManager pageSourceManager)
     {
         QualifiedObjectName name = toQualifiedObjectName(tableName, session.getCatalog().get(), session.getSchema().get());
-        TableHandle tableHandle = metadata.getTableHandle(session, name)
+        TableHandle tableHandle = metadata.getTableHandle(session, fromQualifiedObjectName(name))
                 .orElseThrow(() -> new PrestoException(INVALID_SPATIAL_PARTITIONING, format("Table not found: %s", name)));
         Map<String, ColumnHandle> columnHandles = metadata.getColumnHandles(session, tableHandle);
         List<ColumnHandle> visibleColumnHandles = columnHandles.values().stream()

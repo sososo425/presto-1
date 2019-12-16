@@ -29,6 +29,7 @@ import io.prestosql.metadata.Metadata;
 import io.prestosql.metadata.NewTableLayout;
 import io.prestosql.metadata.OperatorNotFoundException;
 import io.prestosql.metadata.QualifiedObjectName;
+import io.prestosql.metadata.QualifiedObjectNamePart;
 import io.prestosql.metadata.ResolvedFunction;
 import io.prestosql.metadata.TableHandle;
 import io.prestosql.metadata.TableMetadata;
@@ -318,8 +319,9 @@ class StatementAnalyzer
         @Override
         protected Scope visitInsert(Insert insert, Optional<Scope> scope)
         {
-            QualifiedObjectName targetTable = createQualifiedObjectName(session, insert, insert.getTarget());
-            if (metadata.getView(session, targetTable).isPresent()) {
+            QualifiedObjectNamePart targetTableNamePart = createQualifiedObjectName(session, insert, insert.getTarget());
+            QualifiedObjectName targetTable = targetTableNamePart.asQualifiedObjectName();
+            if (metadata.getView(session, targetTableNamePart).isPresent()) {
                 throw semanticException(NOT_SUPPORTED, insert, "Inserting into views is not supported");
             }
 
@@ -329,7 +331,7 @@ class StatementAnalyzer
             analysis.setUpdateType("INSERT");
 
             // verify the insert destination columns match the query
-            Optional<TableHandle> targetTableHandle = metadata.getTableHandle(session, targetTable);
+            Optional<TableHandle> targetTableHandle = metadata.getTableHandle(session, targetTableNamePart);
             if (!targetTableHandle.isPresent()) {
                 throw semanticException(TABLE_NOT_FOUND, insert, "Table '%s' does not exist", targetTable);
             }
@@ -412,8 +414,8 @@ class StatementAnalyzer
         protected Scope visitDelete(Delete node, Optional<Scope> scope)
         {
             Table table = node.getTable();
-            QualifiedObjectName tableName = createQualifiedObjectName(session, table, table.getName());
-            if (metadata.getView(session, tableName).isPresent()) {
+            QualifiedObjectNamePart tableNamePart = createQualifiedObjectName(session, table, table.getName());
+            if (metadata.getView(session, tableNamePart).isPresent()) {
                 throw semanticException(NOT_SUPPORTED, node, "Deleting from views is not supported");
             }
 
@@ -432,7 +434,7 @@ class StatementAnalyzer
 
             analysis.setUpdateType("DELETE");
 
-            accessControl.checkCanDeleteFromTable(session.toSecurityContext(), tableName);
+            accessControl.checkCanDeleteFromTable(session.toSecurityContext(), tableNamePart.asQualifiedObjectName());
 
             return createAndAssignScope(node, scope, Field.newUnqualified("rows", BIGINT));
         }
@@ -441,10 +443,11 @@ class StatementAnalyzer
         protected Scope visitAnalyze(Analyze node, Optional<Scope> scope)
         {
             analysis.setUpdateType("ANALYZE");
-            QualifiedObjectName tableName = createQualifiedObjectName(session, node, node.getTableName());
+            QualifiedObjectNamePart tableNamePart = createQualifiedObjectName(session, node, node.getTableName());
+            QualifiedObjectName tableName = tableNamePart.asQualifiedObjectName();
 
             // verify the target table exists and it's not a view
-            if (metadata.getView(session, tableName).isPresent()) {
+            if (metadata.getView(session, tableNamePart).isPresent()) {
                 throw semanticException(NOT_SUPPORTED, node, "Analyzing views is not supported");
             }
 
@@ -459,7 +462,7 @@ class StatementAnalyzer
                     session,
                     metadata,
                     analysis.getParameters());
-            TableHandle tableHandle = metadata.getTableHandleForStatisticsCollection(session, tableName, analyzeProperties)
+            TableHandle tableHandle = metadata.getTableHandleForStatisticsCollection(session, tableNamePart, analyzeProperties)
                     .orElseThrow(() -> semanticException(TABLE_NOT_FOUND, node, "Table '%s' does not exist", tableName));
 
             // user must have read and insert permission in order to analyze stats of a table
@@ -486,9 +489,9 @@ class StatementAnalyzer
             analysis.setUpdateType("CREATE TABLE");
 
             // turn this into a query that has a new table writer node on top.
-            QualifiedObjectName targetTable = createQualifiedObjectName(session, node, node.getName());
-
-            Optional<TableHandle> targetTableHandle = metadata.getTableHandle(session, targetTable);
+            QualifiedObjectNamePart targetTableNamePart = createQualifiedObjectName(session, node, node.getName());
+            QualifiedObjectName targetTable = targetTableNamePart.asQualifiedObjectName();
+            Optional<TableHandle> targetTableHandle = metadata.getTableHandle(session, targetTableNamePart);
             if (targetTableHandle.isPresent()) {
                 if (node.isNotExists()) {
                     analysis.setCreate(new Analysis.Create(
@@ -573,14 +576,14 @@ class StatementAnalyzer
         {
             analysis.setUpdateType("CREATE VIEW");
 
-            QualifiedObjectName viewName = createQualifiedObjectName(session, node, node.getName());
+            QualifiedObjectNamePart viewNamePart = createQualifiedObjectName(session, node, node.getName());
 
             // analyze the query that creates the view
             StatementAnalyzer analyzer = new StatementAnalyzer(analysis, metadata, sqlParser, accessControl, session, warningCollector);
 
             Scope queryScope = analyzer.analyze(node.getQuery(), scope);
 
-            accessControl.checkCanCreateView(session.toSecurityContext(), viewName);
+            accessControl.checkCanCreateView(session.toSecurityContext(), viewNamePart.asQualifiedObjectName());
 
             validateColumns(node, queryScope.getRelationType());
 
@@ -900,16 +903,17 @@ class StatementAnalyzer
                 }
             }
 
-            QualifiedObjectName name = createQualifiedObjectName(session, table, table.getName());
+            QualifiedObjectNamePart namePart = createQualifiedObjectName(session, table, table.getName());
+            QualifiedObjectName name = namePart.asQualifiedObjectName();
             analysis.addEmptyColumnReferencesForTable(accessControl, session.getIdentity(), name);
 
             // is this a reference to a view?
-            Optional<ConnectorViewDefinition> optionalView = metadata.getView(session, name);
+            Optional<ConnectorViewDefinition> optionalView = metadata.getView(session, namePart);
             if (optionalView.isPresent()) {
                 return createScopeForView(table, name, scope, optionalView.get());
             }
 
-            Optional<TableHandle> tableHandle = metadata.getTableHandle(session, name);
+            Optional<TableHandle> tableHandle = metadata.getTableHandle(session, namePart);
             if (!tableHandle.isPresent()) {
                 if (!metadata.getCatalogHandle(session, name.getCatalogName()).isPresent()) {
                     throw semanticException(CATALOG_NOT_FOUND, table, "Catalog %s does not exist", name.getCatalogName());
@@ -996,8 +1000,8 @@ class StatementAnalyzer
             Statement statement = analysis.getStatement();
             if (statement instanceof CreateView) {
                 CreateView viewStatement = (CreateView) statement;
-                QualifiedObjectName viewNameFromStatement = createQualifiedObjectName(session, viewStatement, viewStatement.getName());
-                if (viewStatement.isReplace() && viewNameFromStatement.equals(name)) {
+                QualifiedObjectNamePart viewNameFromStatement = createQualifiedObjectName(session, viewStatement, viewStatement.getName());
+                if (viewStatement.isReplace() && viewNameFromStatement.asQualifiedObjectName().equals(name)) {
                     throw semanticException(VIEW_IS_RECURSIVE, table, "Statement would create a recursive view");
                 }
             }

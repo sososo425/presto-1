@@ -17,7 +17,7 @@ package io.prestosql.connector.system;
 import com.google.common.collect.ImmutableSet;
 import io.prestosql.FullConnectorSession;
 import io.prestosql.metadata.Metadata;
-import io.prestosql.metadata.QualifiedObjectName;
+import io.prestosql.metadata.QualifiedObjectNamePart;
 import io.prestosql.spi.PrestoException;
 import io.prestosql.spi.connector.ConnectorSession;
 import io.prestosql.spi.connector.SchemaTableName;
@@ -26,6 +26,7 @@ import io.prestosql.spi.connector.SystemTable;
 import java.util.Optional;
 import java.util.Set;
 
+import static io.prestosql.metadata.NamePart.createDefaultNamePart;
 import static io.prestosql.spi.StandardErrorCode.GENERIC_INTERNAL_ERROR;
 import static io.prestosql.spi.connector.SystemTable.Distribution.SINGLE_COORDINATOR;
 import static java.util.Objects.requireNonNull;
@@ -53,7 +54,7 @@ public class MetadataBasedSystemTablesProvider
     {
         Optional<SystemTable> systemTable = metadata.getSystemTable(
                 ((FullConnectorSession) session).getSession(),
-                new QualifiedObjectName(catalogName, tableName.getSchemaName(), tableName.getTableName()));
+                new QualifiedObjectNamePart(createDefaultNamePart(catalogName), createDefaultNamePart(tableName.getSchemaName()), createDefaultNamePart(tableName.getTableName())));
 
         // dynamic system tables require access to the transaction and thus can only run on the current coordinator
         if (systemTable.isPresent() && systemTable.get().getDistribution() != SINGLE_COORDINATOR) {

@@ -30,7 +30,7 @@ import io.prestosql.metadata.CatalogManager;
 import io.prestosql.metadata.InMemoryNodeManager;
 import io.prestosql.metadata.InternalNodeManager;
 import io.prestosql.metadata.Metadata;
-import io.prestosql.metadata.QualifiedObjectName;
+import io.prestosql.metadata.QualifiedObjectNamePart;
 import io.prestosql.metadata.SessionPropertyManager;
 import io.prestosql.security.AccessControl;
 import io.prestosql.security.AccessControlConfig;
@@ -63,6 +63,7 @@ import java.util.function.Consumer;
 import static io.prestosql.connector.CatalogName.createInformationSchemaCatalogName;
 import static io.prestosql.connector.CatalogName.createSystemTablesCatalogName;
 import static io.prestosql.metadata.MetadataManager.createTestMetadataManager;
+import static io.prestosql.metadata.NamePart.createDefaultNamePart;
 import static io.prestosql.operator.scalar.ApplyFunction.APPLY_FUNCTION;
 import static io.prestosql.spi.StandardErrorCode.AMBIGUOUS_NAME;
 import static io.prestosql.spi.StandardErrorCode.CATALOG_NOT_FOUND;
@@ -2063,7 +2064,7 @@ public class TestAnalyzer
                 ImmutableList.of(new ViewColumn("a", BIGINT.getTypeId())),
                 Optional.of("user"),
                 false);
-        inSetupTransaction(session -> metadata.createView(session, new QualifiedObjectName(TPCH_CATALOG, "s1", "v1"), viewData1, false));
+        inSetupTransaction(session -> metadata.createView(session, new QualifiedObjectNamePart(createDefaultNamePart(TPCH_CATALOG), createDefaultNamePart("s1"), createDefaultNamePart("v1")), viewData1, false));
 
         // stale view (different column type)
         ConnectorViewDefinition viewData2 = new ConnectorViewDefinition(
@@ -2073,7 +2074,7 @@ public class TestAnalyzer
                 ImmutableList.of(new ViewColumn("a", VARCHAR.getTypeId())),
                 Optional.of("user"),
                 false);
-        inSetupTransaction(session -> metadata.createView(session, new QualifiedObjectName(TPCH_CATALOG, "s1", "v2"), viewData2, false));
+        inSetupTransaction(session -> metadata.createView(session, new QualifiedObjectNamePart(createDefaultNamePart(TPCH_CATALOG), createDefaultNamePart("s1"), createDefaultNamePart("v2")), viewData2, false));
 
         // view referencing table in different schema from itself and session
         ConnectorViewDefinition viewData3 = new ConnectorViewDefinition(
@@ -2083,7 +2084,7 @@ public class TestAnalyzer
                 ImmutableList.of(new ViewColumn("a", BIGINT.getTypeId())),
                 Optional.of("owner"),
                 false);
-        inSetupTransaction(session -> metadata.createView(session, new QualifiedObjectName(THIRD_CATALOG, "s3", "v3"), viewData3, false));
+        inSetupTransaction(session -> metadata.createView(session, new QualifiedObjectNamePart(createDefaultNamePart(THIRD_CATALOG), createDefaultNamePart("s3"), createDefaultNamePart("v3")), viewData3, false));
 
         // valid view with uppercase column name
         ConnectorViewDefinition viewData4 = new ConnectorViewDefinition(
@@ -2093,7 +2094,7 @@ public class TestAnalyzer
                 ImmutableList.of(new ViewColumn("a", BIGINT.getTypeId())),
                 Optional.of("user"),
                 false);
-        inSetupTransaction(session -> metadata.createView(session, new QualifiedObjectName("tpch", "s1", "v4"), viewData4, false));
+        inSetupTransaction(session -> metadata.createView(session, new QualifiedObjectNamePart(createDefaultNamePart("tpch"), createDefaultNamePart("s1"), createDefaultNamePart("v4")), viewData4, false));
 
         // recursive view referencing to itself
         ConnectorViewDefinition viewData5 = new ConnectorViewDefinition(
@@ -2103,7 +2104,7 @@ public class TestAnalyzer
                 ImmutableList.of(new ViewColumn("a", BIGINT.getTypeId())),
                 Optional.of("user"),
                 false);
-        inSetupTransaction(session -> metadata.createView(session, new QualifiedObjectName(TPCH_CATALOG, "s1", "v5"), viewData5, false));
+        inSetupTransaction(session -> metadata.createView(session, new QualifiedObjectNamePart(createDefaultNamePart(TPCH_CATALOG), createDefaultNamePart("s1"), createDefaultNamePart("v5")), viewData5, false));
 
         // for identifier chain resolving tests
         catalogManager.registerCatalog(createTestingCatalog(CATALOG_FOR_IDENTIFIER_CHAIN_TESTS, CATALOG_FOR_IDENTIFIER_CHAIN_TESTS_NAME));

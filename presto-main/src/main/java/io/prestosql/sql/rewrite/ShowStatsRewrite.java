@@ -17,7 +17,7 @@ import com.google.common.collect.ImmutableList;
 import io.prestosql.Session;
 import io.prestosql.execution.warnings.WarningCollector;
 import io.prestosql.metadata.Metadata;
-import io.prestosql.metadata.QualifiedObjectName;
+import io.prestosql.metadata.QualifiedObjectNamePart;
 import io.prestosql.metadata.TableHandle;
 import io.prestosql.metadata.TableMetadata;
 import io.prestosql.security.AccessControl;
@@ -207,8 +207,8 @@ public class ShowStatsRewrite
 
         private TableHandle getTableHandle(ShowStats node, QualifiedName table)
         {
-            QualifiedObjectName qualifiedTableName = createQualifiedObjectName(session, node, table);
-            return metadata.getTableHandle(session, qualifiedTableName)
+            QualifiedObjectNamePart qualifiedTableNamePart = createQualifiedObjectName(session, node, table);
+            return metadata.getTableHandle(session, qualifiedTableNamePart)
                     .orElseThrow(() -> semanticException(TABLE_NOT_FOUND, node, "Table %s not found", table));
         }
 

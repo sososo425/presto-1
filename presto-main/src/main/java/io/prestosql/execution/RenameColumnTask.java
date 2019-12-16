@@ -17,6 +17,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import io.prestosql.Session;
 import io.prestosql.metadata.Metadata;
 import io.prestosql.metadata.QualifiedObjectName;
+import io.prestosql.metadata.QualifiedObjectNamePart;
 import io.prestosql.metadata.TableHandle;
 import io.prestosql.security.AccessControl;
 import io.prestosql.spi.connector.ColumnHandle;
@@ -49,9 +50,10 @@ public class RenameColumnTask
     public ListenableFuture<?> execute(RenameColumn statement, TransactionManager transactionManager, Metadata metadata, AccessControl accessControl, QueryStateMachine stateMachine, List<Expression> parameters)
     {
         Session session = stateMachine.getSession();
-        QualifiedObjectName tableName = createQualifiedObjectName(session, statement, statement.getTable());
-        TableHandle tableHandle = metadata.getTableHandle(session, tableName)
-                .orElseThrow(() -> semanticException(TABLE_NOT_FOUND, statement, "Table '%s' does not exist", tableName));
+        QualifiedObjectNamePart tableNamePart = createQualifiedObjectName(session, statement, statement.getTable());
+        TableHandle tableHandle = metadata.getTableHandle(session, tableNamePart)
+                .orElseThrow(() -> semanticException(TABLE_NOT_FOUND, statement, "Table '%s' does not exist", tableNamePart));
+        QualifiedObjectName tableName = tableNamePart.asQualifiedObjectName();
 
         String source = statement.getSource().getValue().toLowerCase(ENGLISH);
         String target = statement.getTarget().getValue().toLowerCase(ENGLISH);

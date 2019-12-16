@@ -18,6 +18,7 @@ import io.prestosql.Session;
 import io.prestosql.connector.CatalogName;
 import io.prestosql.metadata.Metadata;
 import io.prestosql.metadata.QualifiedObjectName;
+import io.prestosql.metadata.QualifiedObjectNamePart;
 import io.prestosql.security.AccessControl;
 import io.prestosql.spi.PrestoException;
 import io.prestosql.spi.block.BlockBuilder;
@@ -75,9 +76,12 @@ public class CallTask
         }
 
         Session session = stateMachine.getSession();
-        QualifiedObjectName procedureName = createQualifiedObjectName(session, call, call.getName());
-        CatalogName catalogName = metadata.getCatalogHandle(stateMachine.getSession(), procedureName.getCatalogName())
-                .orElseThrow(() -> semanticException(CATALOG_NOT_FOUND, call, "Catalog %s does not exist", procedureName.getCatalogName()));
+        QualifiedObjectNamePart procedureNamePart = createQualifiedObjectName(session, call, call.getName());
+        CatalogName catalogName = metadata.getCatalogHandle(stateMachine.getSession(), procedureNamePart.getLegacyCatalogName())
+                .orElseThrow(() -> semanticException(CATALOG_NOT_FOUND, call, "Catalog %s does not exist", procedureNamePart.getLegacyCatalogName()));
+
+        QualifiedObjectName procedureName = procedureNamePart.asQualifiedObjectName();
+
         Procedure procedure = metadata.getProcedureRegistry().resolve(catalogName, procedureName.asSchemaTableName());
 
         // map declared argument names to positions

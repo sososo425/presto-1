@@ -76,11 +76,11 @@ public interface Metadata
     /**
      * Returns a table handle for the specified table name.
      */
-    Optional<TableHandle> getTableHandle(Session session, QualifiedObjectName tableName);
+    Optional<TableHandle> getTableHandle(Session session, QualifiedObjectNamePart tableName);
 
-    Optional<SystemTable> getSystemTable(Session session, QualifiedObjectName tableName);
+    Optional<SystemTable> getSystemTable(Session session, QualifiedObjectNamePart tableName);
 
-    Optional<TableHandle> getTableHandleForStatisticsCollection(Session session, QualifiedObjectName tableName, Map<String, Object> analyzeProperties);
+    Optional<TableHandle> getTableHandleForStatisticsCollection(Session session, QualifiedObjectNamePart tableName, Map<String, Object> analyzeProperties);
 
     @Deprecated
     Optional<TableLayoutResult> getLayout(Session session, TableHandle tableHandle, Constraint constraint, Optional<Set<ColumnHandle>> desiredColumns);
@@ -164,7 +164,7 @@ public interface Metadata
     /**
      * Rename the specified table.
      */
-    void renameTable(Session session, TableHandle tableHandle, QualifiedObjectName newTableName);
+    void renameTable(Session session, TableHandle tableHandle, QualifiedObjectNamePart newTableName);
 
     /**
      * Comments to the specified table.
@@ -298,22 +298,22 @@ public interface Metadata
     /**
      * Returns the view definition for the specified view name.
      */
-    Optional<ConnectorViewDefinition> getView(Session session, QualifiedObjectName viewName);
+    Optional<ConnectorViewDefinition> getView(Session session, QualifiedObjectNamePart viewName);
 
     /**
      * Creates the specified view with the specified view definition.
      */
-    void createView(Session session, QualifiedObjectName viewName, ConnectorViewDefinition definition, boolean replace);
+    void createView(Session session, QualifiedObjectNamePart viewName, ConnectorViewDefinition definition, boolean replace);
 
     /**
      * Rename the specified view.
      */
-    void renameView(Session session, QualifiedObjectName existingViewName, QualifiedObjectName newViewName);
+    void renameView(Session session, QualifiedObjectNamePart existingViewName, QualifiedObjectNamePart newViewName);
 
     /**
      * Drops the specified view.
      */
-    void dropView(Session session, QualifiedObjectName viewName);
+    void dropView(Session session, QualifiedObjectNamePart viewName);
 
     /**
      * Try to locate a table index that can lookup results by indexableColumns and provide the requested outputColumns.
@@ -384,12 +384,12 @@ public interface Metadata
     /**
      * Grants the specified privilege to the specified user on the specified table
      */
-    void grantTablePrivileges(Session session, QualifiedObjectName tableName, Set<Privilege> privileges, PrestoPrincipal grantee, boolean grantOption);
+    void grantTablePrivileges(Session session, QualifiedObjectNamePart tableName, Set<Privilege> privileges, PrestoPrincipal grantee, boolean grantOption);
 
     /**
      * Revokes the specified privilege on the specified table from the specified user
      */
-    void revokeTablePrivileges(Session session, QualifiedObjectName tableName, Set<Privilege> privileges, PrestoPrincipal grantee, boolean grantOption);
+    void revokeTablePrivileges(Session session, QualifiedObjectNamePart tableName, Set<Privilege> privileges, PrestoPrincipal grantee, boolean grantOption);
 
     /**
      * Gets the privileges for the specified table available to the given grantee considering the selected session role

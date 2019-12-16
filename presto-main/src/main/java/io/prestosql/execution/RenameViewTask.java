@@ -17,6 +17,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import io.prestosql.Session;
 import io.prestosql.metadata.Metadata;
 import io.prestosql.metadata.QualifiedObjectName;
+import io.prestosql.metadata.QualifiedObjectNamePart;
 import io.prestosql.security.AccessControl;
 import io.prestosql.spi.connector.ConnectorViewDefinition;
 import io.prestosql.sql.tree.Expression;
@@ -47,17 +48,19 @@ public class RenameViewTask
     public ListenableFuture<?> execute(RenameView statement, TransactionManager transactionManager, Metadata metadata, AccessControl accessControl, QueryStateMachine stateMachine, List<Expression> parameters)
     {
         Session session = stateMachine.getSession();
-        QualifiedObjectName viewName = createQualifiedObjectName(session, statement, statement.getSource());
-        Optional<ConnectorViewDefinition> viewDefinition = metadata.getView(session, viewName);
+        QualifiedObjectNamePart viewNamePart = createQualifiedObjectName(session, statement, statement.getSource());
+        Optional<ConnectorViewDefinition> viewDefinition = metadata.getView(session, viewNamePart);
+        QualifiedObjectName viewName = viewNamePart.asQualifiedObjectName();
         if (!viewDefinition.isPresent()) {
             throw semanticException(TABLE_NOT_FOUND, statement, "View '%s' does not exist", viewName);
         }
 
-        QualifiedObjectName target = createQualifiedObjectName(session, statement, statement.getTarget());
+        QualifiedObjectNamePart targetNamePart = createQualifiedObjectName(session, statement, statement.getTarget());
+        QualifiedObjectName target = targetNamePart.asQualifiedObjectName();
         if (!metadata.getCatalogHandle(session, target.getCatalogName()).isPresent()) {
             throw semanticException(CATALOG_NOT_FOUND, statement, "Target catalog '%s' does not exist", target.getCatalogName());
         }
-        if (metadata.getView(session, target).isPresent()) {
+        if (metadata.getView(session, targetNamePart).isPresent()) {
             throw semanticException(TABLE_ALREADY_EXISTS, statement, "Target view '%s' already exists", target);
         }
         if (!viewName.getCatalogName().equals(target.getCatalogName())) {
@@ -66,7 +69,7 @@ public class RenameViewTask
 
         accessControl.checkCanRenameView(session.toSecurityContext(), viewName, target);
 
-        metadata.renameView(session, viewName, target);
+        metadata.renameView(session, viewNamePart, targetNamePart);
 
         return immediateFuture(null);
     }

@@ -21,6 +21,7 @@ import io.prestosql.Session;
 import io.prestosql.connector.CatalogName;
 import io.prestosql.metadata.Metadata;
 import io.prestosql.metadata.QualifiedObjectName;
+import io.prestosql.metadata.QualifiedObjectNamePart;
 import io.prestosql.metadata.TableHandle;
 import io.prestosql.metadata.TableMetadata;
 import io.prestosql.security.AccessControl;
@@ -65,6 +66,7 @@ import static io.prestosql.sql.ParameterUtils.parameterExtractor;
 import static io.prestosql.sql.analyzer.SemanticExceptions.semanticException;
 import static io.prestosql.sql.analyzer.TypeSignatureTranslator.toTypeSignature;
 import static io.prestosql.type.UnknownType.UNKNOWN;
+import static java.util.Locale.ENGLISH;
 
 public class CreateTableTask
         implements DataDefinitionTask<CreateTable>
@@ -93,17 +95,19 @@ public class CreateTableTask
         checkArgument(!statement.getElements().isEmpty(), "no columns for table");
 
         Map<NodeRef<Parameter>, Expression> parameterLookup = parameterExtractor(statement, parameters);
-        QualifiedObjectName tableName = createQualifiedObjectName(session, statement, statement.getName());
-        Optional<TableHandle> tableHandle = metadata.getTableHandle(session, tableName);
+        QualifiedObjectNamePart tableNamePart = createQualifiedObjectName(session, statement, statement.getName());
+        Optional<TableHandle> tableHandle = metadata.getTableHandle(session, tableNamePart);
         if (tableHandle.isPresent()) {
             if (!statement.isNotExists()) {
-                throw semanticException(TABLE_ALREADY_EXISTS, statement, "Table '%s' already exists", tableName);
+                throw semanticException(TABLE_ALREADY_EXISTS, statement, "Table '%s' already exists", tableNamePart.getObjectName().getValue().toLowerCase(ENGLISH));
             }
             return immediateFuture(null);
         }
 
-        CatalogName catalogName = metadata.getCatalogHandle(session, tableName.getCatalogName())
-                .orElseThrow(() -> new PrestoException(NOT_FOUND, "Catalog does not exist: " + tableName.getCatalogName()));
+        CatalogName catalogName = metadata.getCatalogHandle(session, tableNamePart.getLegacyCatalogName())
+                .orElseThrow(() -> new PrestoException(NOT_FOUND, "Catalog does not exist: " + tableNamePart.getLegacyCatalogName()));
+
+        QualifiedObjectName tableName = tableNamePart.asQualifiedObjectName();
 
         LinkedHashMap<String, ColumnMetadata> columns = new LinkedHashMap<>();
         Map<String, Object> inheritedProperties = ImmutableMap.of();
@@ -111,7 +115,7 @@ public class CreateTableTask
         for (TableElement element : statement.getElements()) {
             if (element instanceof ColumnDefinition) {
                 ColumnDefinition column = (ColumnDefinition) element;
-                String name = column.getName().getValue().toLowerCase(Locale.ENGLISH);
+                String name = column.getName().getValue().toLowerCase(ENGLISH);
                 Type type;
                 try {
                     type = metadata.getType(toTypeSignature(column.getType()));
@@ -148,15 +152,17 @@ public class CreateTableTask
             }
             else if (element instanceof LikeClause) {
                 LikeClause likeClause = (LikeClause) element;
-                QualifiedObjectName likeTableName = createQualifiedObjectName(session, statement, likeClause.getTableName());
-                if (!metadata.getCatalogHandle(session, likeTableName.getCatalogName()).isPresent()) {
-                    throw semanticException(CATALOG_NOT_FOUND, statement, "LIKE table catalog '%s' does not exist", likeTableName.getCatalogName());
+                QualifiedObjectNamePart likeTableNamePart = createQualifiedObjectName(session, statement, likeClause.getTableName());
+                if (!metadata.getCatalogHandle(session, likeTableNamePart.getLegacyCatalogName()).isPresent()) {
+                    throw semanticException(CATALOG_NOT_FOUND, statement, "LIKE table catalog '%s' does not exist", likeTableNamePart.getLegacyCatalogName());
                 }
-                if (!tableName.getCatalogName().equals(likeTableName.getCatalogName())) {
+                if (!tableName.getCatalogName().equals(likeTableNamePart.getLegacyCatalogName())) {
                     throw semanticException(NOT_SUPPORTED, statement, "LIKE table across catalogs is not supported");
                 }
-                TableHandle likeTable = metadata.getTableHandle(session, likeTableName)
-                        .orElseThrow(() -> semanticException(TABLE_NOT_FOUND, statement, "LIKE table '%s' does not exist", likeTableName));
+                TableHandle likeTable = metadata.getTableHandle(session, likeTableNamePart)
+                        .orElseThrow(() -> semanticException(TABLE_NOT_FOUND, statement, "LIKE table '%s' does not exist", likeTableNamePart.getObjectName().getValue().toLowerCase(ENGLISH)));
+
+                QualifiedObjectName likeTableName = likeTableNamePart.asQualifiedObjectName();
 
                 TableMetadata likeTableMetadata = metadata.getTableMetadata(session, likeTable);
 
@@ -172,10 +178,10 @@ public class CreateTableTask
                 likeTableMetadata.getColumns().stream()
                         .filter(column -> !column.isHidden())
                         .forEach(column -> {
-                            if (columns.containsKey(column.getName().toLowerCase(Locale.ENGLISH))) {
+                            if (columns.containsKey(column.getName().toLowerCase(ENGLISH))) {
                                 throw semanticException(DUPLICATE_COLUMN_NAME, element, "Column name '%s' specified more than once", column.getName());
                             }
-                            columns.put(column.getName().toLowerCase(Locale.ENGLISH), column);
+                            columns.put(column.getName().toLowerCase(ENGLISH), column);
                         });
             }
             else {

@@ -25,6 +25,7 @@ import io.prestosql.spi.connector.SchemaTableName;
 import io.prestosql.spi.security.PrestoPrincipal;
 import io.prestosql.spi.type.Type;
 import io.prestosql.sql.tree.GrantorSpecification;
+import io.prestosql.sql.tree.Identifier;
 import io.prestosql.sql.tree.Node;
 import io.prestosql.sql.tree.PrincipalSpecification;
 import io.prestosql.sql.tree.QualifiedName;
@@ -33,6 +34,8 @@ import java.util.List;
 import java.util.Optional;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static io.prestosql.metadata.NamePart.createDefaultNamePart;
+import static io.prestosql.metadata.NamePart.createNamePart;
 import static io.prestosql.spi.StandardErrorCode.MISSING_CATALOG_NAME;
 import static io.prestosql.spi.StandardErrorCode.MISSING_SCHEMA_NAME;
 import static io.prestosql.spi.StandardErrorCode.SYNTAX_ERROR;
@@ -77,6 +80,7 @@ public final class MetadataUtil
         checkLowerCase(schemaName, "schemaName");
         checkLowerCase(objectName, "objectName");
     }
+
 
     public static String checkLowerCase(String value, String name)
     {
@@ -134,7 +138,7 @@ public final class MetadataUtil
         return new CatalogSchemaName(catalogName, schemaName);
     }
 
-    public static QualifiedObjectName createQualifiedObjectName(Session session, Node node, QualifiedName name)
+    public static QualifiedObjectNamePart createQualifiedObjectName(Session session, Node node, QualifiedName name)
     {
         requireNonNull(session, "session is null");
         requireNonNull(name, "name is null");
@@ -142,14 +146,14 @@ public final class MetadataUtil
             throw new PrestoException(SYNTAX_ERROR, format("Too many dots in table name: %s", name));
         }
 
-        List<String> parts = Lists.reverse(name.getParts());
-        String objectName = parts.get(0);
-        String schemaName = (parts.size() > 1) ? parts.get(1) : session.getSchema().orElseThrow(() ->
+        List<Identifier> parts = Lists.reverse(name.getOriginalParts());
+        NamePart objectName = createNamePart(parts.get(0));
+        NamePart schemaName = (parts.size() > 1) ? createNamePart(parts.get(1)) : session.getSchema().map(NamePart::createDefaultNamePart).orElseThrow(() ->
                 semanticException(MISSING_SCHEMA_NAME, node, "Schema must be specified when session schema is not set"));
-        String catalogName = (parts.size() > 2) ? parts.get(2) : session.getCatalog().orElseThrow(() ->
+        NamePart catalogName = (parts.size() > 2) ? createNamePart(parts.get(2)) : session.getCatalog().map(NamePart::createDefaultNamePart).orElseThrow(() ->
                 semanticException(MISSING_CATALOG_NAME, node, "Catalog must be specified when session catalog is not set"));
 
-        return new QualifiedObjectName(catalogName, schemaName, objectName);
+        return new QualifiedObjectNamePart(catalogName, schemaName, objectName);
     }
 
     public static PrestoPrincipal createPrincipal(Session session, GrantorSpecification specification)
@@ -187,7 +191,7 @@ public final class MetadataUtil
         if (!session.getCatalog().isPresent() || !session.getSchema().isPresent()) {
             return false;
         }
-        QualifiedObjectName name = new QualifiedObjectName(session.getCatalog().get(), session.getSchema().get(), table);
+        QualifiedObjectNamePart name = new QualifiedObjectNamePart(session.getCatalog().map(NamePart::createDefaultNamePart).get(), session.getSchema().map(NamePart::createDefaultNamePart).get(), createDefaultNamePart(table));
         return metadata.getTableHandle(session, name).isPresent();
     }
 

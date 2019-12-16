@@ -64,6 +64,7 @@ import static io.prestosql.connector.informationschema.InformationSchemaTable.TA
 import static io.prestosql.connector.informationschema.InformationSchemaTable.TABLE_PRIVILEGES;
 import static io.prestosql.connector.informationschema.InformationSchemaTable.VIEWS;
 import static io.prestosql.metadata.MetadataUtil.findColumnMetadata;
+import static io.prestosql.metadata.QualifiedObjectNamePart.fromQualifiedObjectName;
 import static io.prestosql.spi.type.VarcharType.createUnboundedVarcharType;
 import static java.util.Locale.ENGLISH;
 import static java.util.Objects.requireNonNull;
@@ -281,7 +282,7 @@ public class InformationSchemaMetadata
                     .flatMap(prefix -> tables.get().stream()
                             .filter(this::isLowerCase)
                             .map(table -> new QualifiedObjectName(catalogName, prefix.getSchemaName().get(), table)))
-                    .filter(objectName -> !isColumnsEnumeratingTable(informationSchemaTable) || metadata.getTableHandle(session, objectName).isPresent() || metadata.getView(session, objectName).isPresent())
+                    .filter(objectName -> !isColumnsEnumeratingTable(informationSchemaTable) || metadata.getTableHandle(session, fromQualifiedObjectName(objectName)).isPresent() || metadata.getView(session, fromQualifiedObjectName(objectName)).isPresent())
                     .filter(objectName -> !predicate.isPresent() || predicate.get().test(asFixedValues(objectName)))
                     .map(QualifiedObjectName::asQualifiedTablePrefix)
                     .collect(toImmutableSet());

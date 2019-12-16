@@ -17,6 +17,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import io.prestosql.Session;
 import io.prestosql.metadata.Metadata;
 import io.prestosql.metadata.QualifiedObjectName;
+import io.prestosql.metadata.QualifiedObjectNamePart;
 import io.prestosql.metadata.TableHandle;
 import io.prestosql.security.AccessControl;
 import io.prestosql.spi.security.Privilege;
@@ -50,8 +51,9 @@ public class GrantTask
     public ListenableFuture<?> execute(Grant statement, TransactionManager transactionManager, Metadata metadata, AccessControl accessControl, QueryStateMachine stateMachine, List<Expression> parameters)
     {
         Session session = stateMachine.getSession();
-        QualifiedObjectName tableName = createQualifiedObjectName(session, statement, statement.getTableName());
-        Optional<TableHandle> tableHandle = metadata.getTableHandle(session, tableName);
+        QualifiedObjectNamePart tableNamePart = createQualifiedObjectName(session, statement, statement.getTableName());
+        Optional<TableHandle> tableHandle = metadata.getTableHandle(session, tableNamePart);
+        QualifiedObjectName tableName = tableNamePart.asQualifiedObjectName();
         if (!tableHandle.isPresent()) {
             throw semanticException(TABLE_NOT_FOUND, statement, "Table '%s' does not exist", tableName);
         }
@@ -72,7 +74,7 @@ public class GrantTask
             accessControl.checkCanGrantTablePrivilege(session.toSecurityContext(), privilege, tableName, createPrincipal(statement.getGrantee()), statement.isWithGrantOption());
         }
 
-        metadata.grantTablePrivileges(session, tableName, privileges, createPrincipal(statement.getGrantee()), statement.isWithGrantOption());
+        metadata.grantTablePrivileges(session, tableNamePart, privileges, createPrincipal(statement.getGrantee()), statement.isWithGrantOption());
         return immediateFuture(null);
     }
 
