@@ -13,6 +13,8 @@
  */
 package io.prestosql.plugin.phoenix;
 
+import com.google.common.collect.ImmutableList;
+import io.airlift.log.Logger;
 import io.prestosql.testing.AbstractTestIntegrationSmokeTest;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.Test;
@@ -23,6 +25,8 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 import static io.prestosql.plugin.phoenix.PhoenixQueryRunner.createPhoenixQueryRunner;
+import static java.lang.String.format;
+import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
@@ -30,6 +34,7 @@ import static org.testng.Assert.fail;
 public class TestPhoenixIntegrationSmokeTest
         extends AbstractTestIntegrationSmokeTest
 {
+    private static final Logger LOGGER = Logger.get(TestPhoenixIntegrationSmokeTest.class);
     private TestingPhoenixServer testingPhoenixServer;
 
     public TestPhoenixIntegrationSmokeTest()
@@ -118,6 +123,25 @@ public class TestPhoenixIntegrationSmokeTest
         try (Connection connection = DriverManager.getConnection(testingPhoenixServer.getJdbcUrl());
                 Statement statement = connection.createStatement()) {
             statement.execute(sql);
+        }
+    }
+
+    @Override
+    public void testCreateSchema()
+            throws SQLException
+    {
+        skipTestUnless(canCreateSchema());
+        String schemaName = "schema_" + randomNameSuffix();
+        assertEquals(computeActual(format("SHOW SCHEMAS LIKE '%s'", schemaName)).getRowCount(), 0);
+        assertUpdate("CREATE SCHEMA " + schemaName);
+        assertQuery(format("SHOW SCHEMAS LIKE '%s'", schemaName), format("VALUES '%s'", schemaName));
+        assertQueryFails("CREATE SCHEMA " + schemaName, format("line 1:1: Schema '.*.%s' already exists", schemaName));
+        if (canDropSchema()) {
+            assertUpdate("DROP SCHEMA " + schemaName);
+            assertQueryFails("DROP SCHEMA " + schemaName, format("line 1:1: Schema '.*.%s' does not exist", schemaName));
+        }
+        else {
+            cleanUpSchemas(ImmutableList.of(schemaName));
         }
     }
 }

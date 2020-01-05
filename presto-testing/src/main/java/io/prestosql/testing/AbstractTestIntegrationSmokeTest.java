@@ -304,7 +304,7 @@ public abstract class AbstractTestIntegrationSmokeTest
         assertQueryFails("DROP SCHEMA " + schemaName, format("line 1:1: Schema '.*.%s' does not exist", schemaName));
     }
 
-    private static String randomNameSuffix()
+    public static String randomNameSuffix()
     {
         String randomSuffix = Long.toString(abs(random.nextLong()), MAX_RADIX);
         return randomSuffix.substring(0, min(RANDOM_SUFFIX_LENGTH, randomSuffix.length()));

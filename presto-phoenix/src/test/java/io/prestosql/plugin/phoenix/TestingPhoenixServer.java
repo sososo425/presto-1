@@ -18,6 +18,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HBaseTestingUtility;
 import org.apache.hadoop.hbase.MiniHBaseCluster;
+import org.apache.hadoop.hbase.NamespaceDescriptor;
 import org.apache.hadoop.hbase.zookeeper.MiniZooKeeperCluster;
 import org.apache.phoenix.shaded.org.apache.zookeeper.server.ZooKeeperServer;
 
@@ -25,6 +26,8 @@ import javax.annotation.concurrent.GuardedBy;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -143,5 +146,15 @@ public final class TestingPhoenixServer
             throws InterruptedException
     {
         tpchLoadComplete.await(2, TimeUnit.MINUTES);
+    }
+
+    public List<String> getNameSpace()
+            throws IOException
+    {
+        List<String> nameSpaceList = new ArrayList<>();
+        for (NamespaceDescriptor desc : hbaseTestingUtility.getHBaseAdmin().listNamespaceDescriptors()) {
+            nameSpaceList.add(desc.getName());
+        }
+        return nameSpaceList;
     }
 }
