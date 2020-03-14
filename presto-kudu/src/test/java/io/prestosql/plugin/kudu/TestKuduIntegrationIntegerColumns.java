@@ -16,6 +16,7 @@ package io.prestosql.plugin.kudu;
 import io.prestosql.testing.AbstractTestQueryFramework;
 import io.prestosql.testing.MaterializedResult;
 import io.prestosql.testing.QueryRunner;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;
@@ -32,11 +33,20 @@ public class TestKuduIntegrationIntegerColumns
             new TestInt("BIGINT", 64),
     };
 
+    private TestingKuduServer kuduServer;
+
     @Override
     protected QueryRunner createQueryRunner()
             throws Exception
     {
-        return KuduQueryRunnerFactory.createKuduQueryRunner("test_integer");
+        kuduServer = new TestingKuduServer();
+        return KuduQueryRunnerFactory.createKuduQueryRunner(kuduServer, "test_integer");
+    }
+
+    @AfterClass(alwaysRun = true)
+    public final void destroy()
+    {
+        kuduServer.close();
     }
 
     @Test

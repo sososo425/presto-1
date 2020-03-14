@@ -16,6 +16,7 @@ package io.prestosql.plugin.kudu;
 import io.prestosql.testing.AbstractTestQueryFramework;
 import io.prestosql.testing.MaterializedResult;
 import io.prestosql.testing.QueryRunner;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.Test;
 
 import static java.lang.String.format;
@@ -36,11 +37,20 @@ public class TestKuduIntegrationDecimalColumns
             new TestDecimal(38, 28),
     };
 
+    private TestingKuduServer kuduServer;
+
     @Override
     protected QueryRunner createQueryRunner()
             throws Exception
     {
-        return KuduQueryRunnerFactory.createKuduQueryRunner("decimal");
+        kuduServer = new TestingKuduServer();
+        return KuduQueryRunnerFactory.createKuduQueryRunner(kuduServer, "decimal");
+    }
+
+    @AfterClass(alwaysRun = true)
+    public final void destroy()
+    {
+        kuduServer.close();
     }
 
     @Test
