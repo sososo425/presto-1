@@ -1,0 +1,46 @@
+version: "3"
+services:
+    kudu-master-1:
+        image: apache/kudu:1.10.0
+        command: ["master"]
+        environment:
+            - >
+              MASTER_ARGS=--fs_wal_dir=/var/lib/kudu/master
+              --logtostderr
+              --use_hybrid_clock=false
+    kudu-tserver-1:
+        image: apache/kudu:1.10.0
+        depends_on:
+            - kudu-master-1
+        command: ["tserver"]
+        environment:
+            - KUDU_MASTERS=kudu-master-1:7051
+            - >
+              TSERVER_ARGS=--fs_wal_dir=/var/lib/kudu/tserver
+              --rpc_advertised_addresses=kudu-tserver-1
+              --use_hybrid_clock=false
+              --logtostderr
+    kudu-tserver-2:
+        image: apache/kudu:1.10.0
+        depends_on:
+            - kudu-master-1
+        command: ["tserver"]
+        environment:
+            - KUDU_MASTERS=kudu-master-1:7051
+            - >
+              TSERVER_ARGS=--fs_wal_dir=/var/lib/kudu/tserver
+              --rpc_advertised_addresses=kudu-tserver-2
+              --use_hybrid_clock=false
+              --logtostderr
+    kudu-tserver-3:
+        image: apache/kudu:1.10.0
+        depends_on:
+            - kudu-master-1
+        command: ["tserver"]
+        environment:
+            - KUDU_MASTERS=kudu-master-1:7051
+            - >
+              TSERVER_ARGS=--fs_wal_dir=/var/lib/kudu/tserver
+              --rpc_advertised_addresses=kudu-tserver-3
+              --use_hybrid_clock=false
+              --logtostderr

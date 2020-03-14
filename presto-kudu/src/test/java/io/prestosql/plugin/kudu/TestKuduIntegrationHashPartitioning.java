@@ -17,6 +17,7 @@ import io.prestosql.testing.AbstractTestQueryFramework;
 import io.prestosql.testing.MaterializedResult;
 import io.prestosql.testing.QueryRunner;
 import org.intellij.lang.annotations.Language;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;
@@ -24,11 +25,14 @@ import static org.testng.Assert.assertEquals;
 public class TestKuduIntegrationHashPartitioning
         extends AbstractTestQueryFramework
 {
+    private KuduServer kuduServer;
+
     @Override
     protected QueryRunner createQueryRunner()
             throws Exception
     {
-        return KuduQueryRunnerFactory.createKuduQueryRunner("hash");
+        kuduServer = new KuduServer();
+        return KuduQueryRunnerFactory.createKuduQueryRunner(kuduServer, "hash");
     }
 
     @Test
@@ -78,5 +82,12 @@ public class TestKuduIntegrationHashPartitioning
 
         MaterializedResult result = computeActual("SELECT id FROM " + tableName);
         assertEquals(result.getRowCount(), 1);
+    }
+
+    @AfterClass(alwaysRun = true)
+    public final void destroy()
+    {
+        getQueryRunner().close();
+        kuduServer.close();
     }
 }
