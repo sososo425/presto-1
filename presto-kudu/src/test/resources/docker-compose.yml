@@ -1,0 +1,22 @@
+version: "3"
+services:
+    kudu-master:
+        image: apache/kudu:1.10.0
+        command: ["master"]
+        environment:
+            - >
+              MASTER_ARGS=--fs_wal_dir=/var/lib/kudu/master
+              --use_hybrid_clock=false
+              --default_num_replicas=1
+    kudu-tserver:
+        image: apache/kudu:1.10.0
+        depends_on:
+            - kudu-master
+        command: ["tserver"]
+        environment:
+            - KUDU_MASTERS=kudu-master:7051
+            - >
+              TSERVER_ARGS=--fs_wal_dir=/var/lib/kudu/tserver
+              --rpc_advertised_addresses=kudu-tserver
+              --use_hybrid_clock=false
+
