@@ -42,7 +42,7 @@ public final class KuduQueryRunnerFactory
         try {
             runner = DistributedQueryRunner.builder(createSession(kuduSchema)).setNodeCount(3).build();
 
-            installKuduConnector(kuduServer.getMasterAddress().toString(), runner, kuduSchema);
+            installKuduConnector(kuduServer.getMasterAddress(), runner, kuduSchema);
 
             return runner;
         }
@@ -69,7 +69,7 @@ public final class KuduQueryRunnerFactory
             runner.installPlugin(new TpchPlugin());
             runner.createCatalog("tpch", "tpch");
 
-            installKuduConnector(kuduServer.getMasterAddress().toString(), runner, kuduSchema);
+            installKuduConnector(kuduServer.getMasterAddress(), runner, kuduSchema);
 
             copyTpchTables(runner, "tpch", TINY_SCHEMA_NAME, createSession(kuduSchema), tables);
 
