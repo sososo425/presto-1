@@ -53,7 +53,7 @@ public class KuduServer
         }
         masterContainers = masterBuilder.build();
         for (Integer slavePort : KUDU_TSERVER_PORTS) {
-            tServerBuilder.add(new GenericContainer<>("apache/kudu-1.10.0")
+            tServerBuilder.add(new GenericContainer<>("apache/kudu:1.10.0")
                     .withExposedPorts(slavePort)
                     .withCommand("tserver")
                     .withEnv("KUDU_MASTERS", kuduMasters)

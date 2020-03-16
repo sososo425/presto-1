@@ -84,18 +84,6 @@ jobs:
       fail-fast: false
       matrix:
         modules: [
-          "presto-main",
-          "presto-tests",
-          "presto-tests -P ci-only",
-          "presto-raptor-legacy",
-          "presto-accumulo",
-          "presto-cassandra",
-          "presto-hive,presto-orc",
-          "presto-hive,presto-parquet -P test-parquet",
-          "presto-mongodb,presto-kafka,presto-elasticsearch",
-          "presto-redis",
-          "presto-sqlserver,presto-postgresql,presto-mysql",
-          "presto-phoenix,presto-iceberg",
           "presto-kudu",
         ]
     steps:
