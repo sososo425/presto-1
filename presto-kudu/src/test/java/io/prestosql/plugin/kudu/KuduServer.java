@@ -17,8 +17,8 @@ package io.prestosql.plugin.kudu;
 import com.google.common.collect.ImmutableList;
 import com.google.common.net.HostAndPort;
 import io.airlift.log.Logger;
-import org.testcontainers.DockerClientFactory;
 import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.containers.Network;
 
 import java.io.Closeable;
 import java.util.List;
@@ -36,23 +36,28 @@ public class KuduServer
 
     public KuduServer()
     {
+        Network network = Network.newNetwork();
+
         log.info("Starting kudu...");
         ImmutableList.Builder<GenericContainer<?>> masterBuilder = ImmutableList.builder();
         ImmutableList.Builder<GenericContainer<?>> tServerBuilder = ImmutableList.builder();
-        String address =  DockerClientFactory.instance().dockerHostIpAddress();
+        String address = "kudu";
         String kuduMasters = address + ":7051," + address + ":7151," + address + ":7251";
         for (Integer masterPort : KUDU_MASTER_PORTS) {
             masterBuilder.add(new GenericContainer<>("apache/kudu-1.10.0")
                     .withExposedPorts(masterPort)
                     .withCommand("master")
-                    .withEnv("KUDU_MASTERS", kuduMasters));
+                    .withEnv("KUDU_MASTERS", kuduMasters)
+                    .withNetwork(network)
+                    .withNetworkAliases("kudu"));
         }
         masterContainers = masterBuilder.build();
         for (Integer slavePort : KUDU_TSERVER_PORTS) {
             tServerBuilder.add(new GenericContainer<>("apache/kudu-1.10.0")
                     .withExposedPorts(slavePort)
                     .withCommand("tserver")
-                    .withEnv("KUDU_MASTERS", kuduMasters));
+                    .withEnv("KUDU_MASTERS", kuduMasters)
+                    .withNetwork(network));
         }
         tServerContainers = tServerBuilder.build();
         masterContainers.forEach(GenericContainer::start);
