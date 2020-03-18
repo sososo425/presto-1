@@ -13,6 +13,8 @@
  */
 package io.prestosql.plugin.kudu;
 
+import org.testng.annotations.Test;
+
 import java.util.Optional;
 
 public class TestEmptyInferSchemaSmokeTest
@@ -22,5 +24,11 @@ public class TestEmptyInferSchemaSmokeTest
     protected Optional<String> getKuduSchemaEmulationPrefix()
     {
         return Optional.of("");
+    }
+
+    @Test
+    public void testListingOfTableForDefaultSchema()
+    {
+        assertQuery("SHOW TABLES FROM default", "VALUES '$schemas'");
     }
 }
