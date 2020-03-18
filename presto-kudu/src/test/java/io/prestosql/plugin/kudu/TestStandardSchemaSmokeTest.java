@@ -29,6 +29,8 @@ public class TestStandardSchemaSmokeTest
     @Test
     public void testListingOfTableForDefaultSchema()
     {
+        System.out.println("Std " + computeActual("SHOW TABLES FROM default").getMaterializedRows());
+        System.out.println("Sz std " + computeActual("SELECT * FROM information_schema.columns").getMaterializedRows());
         assertQuery("SHOW TABLES FROM default", "VALUES '$schemas'");
     }
 }

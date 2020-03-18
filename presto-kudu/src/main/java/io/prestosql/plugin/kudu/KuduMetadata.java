@@ -79,7 +79,8 @@ public class KuduMetadata
     @Override
     public List<SchemaTableName> listTables(ConnectorSession session, Optional<String> schemaName)
     {
-        return clientSession.listTables(schemaName);
+        List<SchemaTableName> tab = clientSession.listTables(schemaName);
+        return tab;
     }
 
     @Override

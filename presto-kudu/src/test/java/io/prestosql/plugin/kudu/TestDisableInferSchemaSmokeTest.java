@@ -29,6 +29,8 @@ public class TestDisableInferSchemaSmokeTest
     @Test
     public void testListingOfTableForDefaultSchema()
     {
+        System.out.println("Disable " + computeActual("SHOW TABLES FROM default").getMaterializedRows());
+        System.out.println("Sz disable " + computeActual("SELECT * FROM information_schema.columns").getMaterializedRows());
         assertQuery("SHOW TABLES FROM default", "VALUES '$schemas', 'orders'");
     }
 }

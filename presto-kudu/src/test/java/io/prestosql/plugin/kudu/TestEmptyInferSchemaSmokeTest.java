@@ -29,6 +29,8 @@ public class TestEmptyInferSchemaSmokeTest
     @Test
     public void testListingOfTableForDefaultSchema()
     {
+        System.out.println("Empty " + computeActual("SHOW TABLES FROM default").getMaterializedRows());
+        System.out.println("Sz " + computeActual("SELECT * FROM information_schema.columns").getMaterializedRows());
         assertQuery("SHOW TABLES FROM default", "VALUES '$schemas'");
     }
 }

@@ -122,15 +122,18 @@ public class KuduClientSession
     private List<SchemaTableName> listTablesSingleSchema(String schemaName)
     {
         final String prefix = schemaEmulation.getPrefixForTablesOfSchema(schemaName);
-
+        System.out.println("Prefix " + schemaName + " " + prefix);
         List<String> tables = internalListTables(prefix);
+        System.out.println("Internal list " + tables);
         if (schemaName.equals(DEFAULT_SCHEMA)) {
             tables = schemaEmulation.filterTablesForDefaultSchema(tables);
         }
-        return tables.stream()
+        List<SchemaTableName> schemaTableNames = tables.stream()
                 .map(schemaEmulation::fromRawName)
                 .filter(Objects::nonNull)
                 .collect(toImmutableList());
+        System.out.println("Sch " + schemaTableNames);
+        return schemaTableNames;
     }
 
     public Schema getTableSchema(KuduTableHandle tableHandle)
