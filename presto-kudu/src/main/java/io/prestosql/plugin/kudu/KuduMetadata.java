@@ -94,7 +94,7 @@ public class KuduMetadata
         else {
             tables = ImmutableList.of(prefix.toSchemaTableName());
         }
-
+        System.out.println("Tables " + tables);
         ImmutableMap.Builder<SchemaTableName, List<ColumnMetadata>> columns = ImmutableMap.builder();
         for (SchemaTableName tableName : tables) {
             KuduTableHandle tableHandle = getTableHandle(session, tableName);

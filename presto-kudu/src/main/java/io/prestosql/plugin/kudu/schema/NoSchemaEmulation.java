@@ -20,6 +20,7 @@ import io.prestosql.spi.connector.SchemaTableName;
 import org.apache.kudu.client.KuduClient;
 
 import java.util.List;
+import java.util.function.Predicate;
 
 import static io.prestosql.plugin.kudu.KuduClientSession.DEFAULT_SCHEMA;
 import static io.prestosql.spi.StandardErrorCode.GENERIC_USER_ERROR;
@@ -82,5 +83,11 @@ public class NoSchemaEmulation
     public String getPrefixForTablesOfSchema(String schemaName)
     {
         return "";
+    }
+
+    @Override
+    public Predicate<String> getPredicateForDefaultSchema()
+    {
+        return (name) -> true;
     }
 }

@@ -95,6 +95,7 @@ public class KuduClientSession
     private List<String> internalListTables(String prefix)
     {
         try {
+            System.out.println("Prefix " + prefix);
             if (prefix.isEmpty()) {
                 return client.getTablesList().getTablesList();
             }
@@ -112,6 +113,7 @@ public class KuduClientSession
         }
 
         List<SchemaTableName> all = new ArrayList<>();
+        System.out.println("System.out.println Schema " + listSchemaNames());
         for (String schemaName : listSchemaNames()) {
             List<SchemaTableName> single = listTablesSingleSchema(schemaName);
             all.addAll(single);
@@ -123,7 +125,17 @@ public class KuduClientSession
     {
         final String prefix = schemaEmulation.getPrefixForTablesOfSchema(schemaName);
 
+        System.out.println("Processing for " + schemaName);
         List<String> tables = internalListTables(prefix);
+        if (schemaName.equals(DEFAULT_SCHEMA)) {
+            System.out.println("Default mode " + schemaName);
+            System.out.println("Bedire " + tables);
+            tables = tables.stream()
+                    .filter(schemaEmulation.getPredicateForDefaultSchema())
+                    .collect(toImmutableList());
+            System.out.println("After " + tables);
+        }
+        System.out.println("System.out.println  Table " + tables + " " + schemaName);
         return tables.stream()
                 .map(schemaEmulation::fromRawName)
                 .filter(Objects::nonNull)
@@ -272,7 +284,9 @@ public class KuduClientSession
     public KuduTable createTable(ConnectorTableMetadata tableMetadata, boolean ignoreExisting)
     {
         try {
+            System.out.println("Actual name " + tableMetadata.getTable());
             String rawName = schemaEmulation.toRawName(tableMetadata.getTable());
+            System.out.println("Raw name " + tableMetadata.getTable());
             if (ignoreExisting) {
                 if (client.tableExists(rawName)) {
                     return null;

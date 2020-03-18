@@ -17,6 +17,7 @@ import io.prestosql.spi.connector.SchemaTableName;
 import org.apache.kudu.client.KuduClient;
 
 import java.util.List;
+import java.util.function.Predicate;
 
 public interface SchemaEmulation
 {
@@ -33,4 +34,6 @@ public interface SchemaEmulation
     SchemaTableName fromRawName(String rawName);
 
     String getPrefixForTablesOfSchema(String schemaName);
+
+    Predicate<String> getPredicateForDefaultSchema();
 }

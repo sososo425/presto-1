@@ -36,6 +36,7 @@ import org.apache.kudu.client.Upsert;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.function.Predicate;
 
 import static io.prestosql.plugin.kudu.KuduClientSession.DEFAULT_SCHEMA;
 import static io.prestosql.spi.StandardErrorCode.GENERIC_INTERNAL_ERROR;
@@ -263,5 +264,11 @@ public class SchemaEmulationByTableNameConvention
         else {
             return commonPrefix + schemaName + ".";
         }
+    }
+
+    @Override
+    public Predicate<String> getPredicateForDefaultSchema()
+    {
+        return name -> !name.contains(".");
     }
 }
