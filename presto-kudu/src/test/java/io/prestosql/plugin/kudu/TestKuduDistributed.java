@@ -37,6 +37,18 @@ public class TestKuduDistributed
         return createKuduQueryRunnerTpch(kuduServer, Optional.empty(), TpchTable.getTables());
     }
 
+    @Override
+    public void testDescribeOutput()
+    {
+        // this connector uses a non-canonical type for varchar columns in tpch
+    }
+
+    @Override
+    public void testDescribeOutputNamedAndUnnamed()
+    {
+        // this connector uses a non-canonical type for varchar columns in tpch
+    }
+
     @AfterClass(alwaysRun = true)
     public void destroy()
     {
