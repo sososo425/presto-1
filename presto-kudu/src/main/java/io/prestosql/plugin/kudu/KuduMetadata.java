@@ -15,6 +15,7 @@ package io.prestosql.plugin.kudu;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import io.airlift.slice.Slice;
 import io.prestosql.plugin.kudu.properties.KuduTableProperties;
 import io.prestosql.plugin.kudu.properties.PartitionDesign;
@@ -433,16 +434,18 @@ public class KuduMetadata
     {
         KuduTableHandle handle = (KuduTableHandle) table;
 
-        if (handle.getDesiredColumns().isPresent()) {
-            return Optional.empty();
-        }
-
         ImmutableList.Builder<ColumnHandle> desiredColumns = ImmutableList.builder();
         ImmutableList.Builder<Assignment> assignmentList = ImmutableList.builder();
         assignments.forEach((name, column) -> {
             desiredColumns.add(column);
             assignmentList.add(new Assignment(name, column, ((KuduColumnHandle) column).getType()));
         });
+
+        if (handle.getDesiredColumns()
+                .map(columnList -> ImmutableSet.of(columnList).containsAll(desiredColumns.build()))
+                .orElse(false)) {
+            return Optional.empty();
+        }
 
         handle = new KuduTableHandle(
                 handle.getSchemaTableName(),
