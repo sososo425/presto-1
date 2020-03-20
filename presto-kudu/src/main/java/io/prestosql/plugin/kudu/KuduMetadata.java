@@ -441,9 +441,7 @@ public class KuduMetadata
             assignmentList.add(new Assignment(name, column, ((KuduColumnHandle) column).getType()));
         });
 
-        if (handle.getDesiredColumns()
-                .map(columnList -> ImmutableSet.of(columnList).containsAll(desiredColumns.build()))
-                .orElse(false)) {
+        if (ImmutableSet.copyOf(desiredColumns.build()).equals(handle.getDesiredColumns().map(ImmutableSet::copyOf).orElse(ImmutableSet.of()))) {
             return Optional.empty();
         }
 
