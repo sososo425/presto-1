@@ -13,9 +13,11 @@
  */
 package io.prestosql.plugin.kudu;
 
-import io.prestosql.testing.AbstractTestQueries;
+import io.prestosql.testing.AbstractTestDistributedQueries;
 import io.prestosql.testing.QueryRunner;
+import io.prestosql.testing.sql.TestTable;
 import io.prestosql.tpch.TpchTable;
+import org.testng.SkipException;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.Test;
 
@@ -25,7 +27,7 @@ import static io.prestosql.plugin.kudu.KuduQueryRunnerFactory.createKuduQueryRun
 
 @Test
 public class TestKuduDistributed
-        extends AbstractTestQueries
+        extends AbstractTestDistributedQueries
 {
     private TestingKuduServer kuduServer;
 
@@ -34,7 +36,7 @@ public class TestKuduDistributed
             throws Exception
     {
         kuduServer = new TestingKuduServer();
-        return createKuduQueryRunnerTpch(kuduServer, Optional.empty(), TpchTable.getTables());
+        return createKuduQueryRunnerTpch(kuduServer, Optional.of(""), TpchTable.getTables());
     }
 
     @Override
@@ -53,5 +55,42 @@ public class TestKuduDistributed
     public void destroy()
     {
         kuduServer.close();
+    }
+
+    @Override
+    protected TestTable createTableWithDefaultColumns()
+    {
+        throw new SkipException("Kudu connector does not support column default values");
+    }
+
+    @Override
+    public void testCommentTable()
+    {
+        // Raptor connector currently does not support comment on table
+        assertQueryFails("COMMENT ON TABLE orders IS 'hello'", "This connector does not support setting table comments");
+    }
+
+    @Override
+    public void testInsertWithCoercion()
+    {
+        // No support for char type
+    }
+
+    @Override
+    protected boolean supportsViews()
+    {
+        return false;
+    }
+
+    @Override
+    public void testWrittenStats()
+    {
+        // TODO Kudu connector supports CTAS and inserts, but the test would fail
+    }
+
+    @Override
+    protected boolean supportsArrays()
+    {
+        return false;
     }
 }
