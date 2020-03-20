@@ -14,6 +14,7 @@
 package io.prestosql.plugin.kudu;
 
 import io.prestosql.testing.AbstractTestDistributedQueries;
+import io.prestosql.testing.MaterializedResult;
 import io.prestosql.testing.QueryRunner;
 import io.prestosql.testing.sql.TestTable;
 import io.prestosql.tpch.TpchTable;
@@ -24,6 +25,9 @@ import org.testng.annotations.Test;
 import java.util.Optional;
 
 import static io.prestosql.plugin.kudu.KuduQueryRunnerFactory.createKuduQueryRunnerTpch;
+import static io.prestosql.spi.type.VarcharType.VARCHAR;
+import static io.prestosql.testing.MaterializedResult.resultBuilder;
+import static io.prestosql.testing.assertions.Assert.assertEquals;
 
 @Test
 public class TestKuduDistributed
@@ -92,5 +96,25 @@ public class TestKuduDistributed
     protected boolean supportsArrays()
     {
         return false;
+    }
+
+    @Override
+    public void testShowColumns()
+    {
+        MaterializedResult actual = computeActual("SHOW COLUMNS FROM orders");
+
+        MaterializedResult expectedParametrizedVarchar = resultBuilder(getSession(), VARCHAR, VARCHAR, VARCHAR, VARCHAR)
+                .row("orderkey", "bigint", "", "")
+                .row("custkey", "bigint", "", "")
+                .row("orderstatus", "varchar", "", "")
+                .row("totalprice", "double", "", "")
+                .row("orderdate", "varchar", "", "")
+                .row("orderpriority", "varchar", "", "")
+                .row("clerk", "varchar", "", "")
+                .row("shippriority", "integer", "", "")
+                .row("comment", "varchar", "", "")
+                .build();
+
+        assertEquals(actual, expectedParametrizedVarchar);
     }
 }
