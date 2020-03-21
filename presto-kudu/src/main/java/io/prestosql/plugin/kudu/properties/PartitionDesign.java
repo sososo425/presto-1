@@ -42,6 +42,7 @@ public class PartitionDesign
 
     public boolean hasPartitions()
     {
+        System.out.println("Hash " + hash + " " + range);
         return hash != null && !hash.isEmpty() && !hash.get(0).getColumns().isEmpty()
                 || range != null && !range.getColumns().isEmpty();
     }
