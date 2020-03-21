@@ -100,6 +100,7 @@ public class KuduPageSink
         this.columnTypes = mapping.getColumnTypes();
         this.originalColumnTypes = mapping.getOriginalColumnTypes();
         this.generateUUID = !KuduTableProperties.getPartitionDesign(table).hasPartitions();
+        System.out.println("!!! " + this.generateUUID);
 
         this.table = table;
         this.session = clientSession.newSession();
