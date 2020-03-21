@@ -195,7 +195,7 @@ public class KuduPageSink
                 catch (Exception e) {
                     System.out.println("Type " + type + " " + block + " " + destChannel);
                     try {
-                        System.out.println("2!2!2! " + this.generateUUID + " " + table.getPartitionSchema() + " " + table.getRangePartitions(100L) + " " + table.getName() + " " + table.getSchema().getColumns() + " " + page);
+                        System.out.println("2!2!2! " + this.generateUUID + " " + table.getPartitionSchema() + " " + table.getRangePartitions(100L) + " " + table.getName() + " " + table.getSchema().getColumns() + " " + table.getSchema().getColumns().size() + " " + page);
                     }
                     catch (Exception e2) {
                         e2.printStackTrace();
