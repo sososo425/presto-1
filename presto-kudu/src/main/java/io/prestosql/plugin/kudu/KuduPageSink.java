@@ -137,6 +137,7 @@ public class KuduPageSink
     {
         Block block = page.getBlock(channel);
         Type type = columnTypes.get(destChannel);
+        System.out.println("Col " + block + " " + type);
         if (block.isNull(position)) {
             row.setNull(destChannel);
         }
