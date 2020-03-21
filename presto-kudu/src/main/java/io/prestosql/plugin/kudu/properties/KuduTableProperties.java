@@ -431,6 +431,7 @@ public final class KuduTableProperties
         Schema schema = table.getSchema();
         PartitionDesign partitionDesign = new PartitionDesign();
         PartitionSchema partitionSchema = table.getPartitionSchema();
+        System.out.println("!! " + table.getName());
 
         List<HashPartitionDefinition> hashPartitions = partitionSchema.getHashBucketSchemas().stream()
                 .map(hashBucketSchema -> {
