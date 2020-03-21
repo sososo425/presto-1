@@ -182,7 +182,14 @@ public class KuduPageSink
                 row.addStringUtf8(destChannel, bytes);
             }
             else {
-                row.addString(destChannel, type.getSlice(block, position).toStringUtf8());
+                try {
+                    row.addString(destChannel, type.getSlice(block, position).toStringUtf8());
+                }
+                catch (Exception e) {
+                    System.out.println("Type " + type + " " + block + " " + destChannel);
+                    row.addString(destChannel, type.getSlice(block, position).toStringUtf8());
+
+                }
             }
         }
         else if (VARBINARY.equals(type)) {
