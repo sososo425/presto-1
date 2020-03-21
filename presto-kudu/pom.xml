@@ -209,7 +209,7 @@
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
                             <includes>
-                                <include>**/TestKuduIntegration*.java</include>
+                                <include>**/TestKuduDistributed.java</include>
                             </includes>
                         </configuration>
                     </plugin>
