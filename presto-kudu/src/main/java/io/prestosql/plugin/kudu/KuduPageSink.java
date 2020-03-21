@@ -120,7 +120,13 @@ public class KuduPageSink
             }
 
             for (int channel = 0; channel < page.getChannelCount(); channel++) {
-                appendColumn(row, page, position, channel, channel + start);
+                try {
+                    appendColumn(row, page, position, channel, channel + start);
+                }
+                catch (Exception e) {
+                    System.out.println("Type " + columnTypes + " " + page.getBlock(channel));
+                    appendColumn(row, page, position, channel, channel + start);
+                }
             }
 
             try {
@@ -137,7 +143,6 @@ public class KuduPageSink
     {
         Block block = page.getBlock(channel);
         Type type = columnTypes.get(destChannel);
-        System.out.println("Col " + block + " " + type);
         if (block.isNull(position)) {
             row.setNull(destChannel);
         }
