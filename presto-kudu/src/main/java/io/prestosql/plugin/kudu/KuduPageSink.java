@@ -17,6 +17,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.Shorts;
 import com.google.common.primitives.SignedBytes;
 import io.airlift.slice.Slice;
+import io.prestosql.plugin.kudu.properties.KuduTableProperties;
 import io.prestosql.spi.Page;
 import io.prestosql.spi.block.Block;
 import io.prestosql.spi.connector.ConnectorPageSink;
@@ -98,7 +99,7 @@ public class KuduPageSink
         this.connectorSession = connectorSession;
         this.columnTypes = mapping.getColumnTypes();
         this.originalColumnTypes = mapping.getOriginalColumnTypes();
-        this.generateUUID = mapping.isGenerateUUID();
+        this.generateUUID = !KuduTableProperties.getPartitionDesign(table).hasPartitions();
 
         this.table = table;
         this.session = clientSession.newSession();
@@ -188,7 +189,6 @@ public class KuduPageSink
                 catch (Exception e) {
                     System.out.println("Type " + type + " " + block + " " + destChannel);
                     row.addString(destChannel, type.getSlice(block, position).toStringUtf8());
-
                 }
             }
         }
