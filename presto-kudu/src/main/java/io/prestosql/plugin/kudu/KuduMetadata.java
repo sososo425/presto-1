@@ -222,7 +222,31 @@ public class KuduMetadata
     @Override
     public void createTable(ConnectorSession session, ConnectorTableMetadata tableMetadata, boolean ignoreExisting)
     {
-        clientSession.createTable(tableMetadata, ignoreExisting);
+        PartitionDesign design = KuduTableProperties.getPartitionDesign(tableMetadata.getProperties());
+        boolean generateUUID = !design.hasPartitions();
+        ConnectorTableMetadata finalTableMetadata = tableMetadata;
+        if (generateUUID) {
+            String rowId = KuduColumnHandle.ROW_ID;
+            List<ColumnMetadata> copy = new ArrayList<>(tableMetadata.getColumns());
+            Map<String, Object> columnProperties = new HashMap<>();
+            columnProperties.put(KuduTableProperties.PRIMARY_KEY, true);
+            copy.add(0, ColumnMetadata.builder()
+                    .setName(rowId)
+                    .setType(VarcharType.VARCHAR)
+                    .setComment(Optional.of("key=true"))
+                    .setHidden(true)
+                    .setNullable(false)
+                    .setProperties(columnProperties)
+                    .build());
+            List<ColumnMetadata> finalColumns = ImmutableList.copyOf(copy);
+            Map<String, Object> propsCopy = new HashMap<>(tableMetadata.getProperties());
+            propsCopy.put(KuduTableProperties.PARTITION_BY_HASH_COLUMNS, ImmutableList.of(rowId));
+            propsCopy.put(KuduTableProperties.PARTITION_BY_HASH_BUCKETS, 2);
+            Map<String, Object> finalProperties = ImmutableMap.copyOf(propsCopy);
+            finalTableMetadata = new ConnectorTableMetadata(tableMetadata.getTable(),
+                    finalColumns, finalProperties, tableMetadata.getComment());
+        }
+        clientSession.createTable(finalTableMetadata, false);
     }
 
     @Override
@@ -309,6 +333,7 @@ public class KuduMetadata
                     .setType(VarcharType.VARCHAR)
                     .setComment(Optional.of("key=true"))
                     .setHidden(true)
+                    .setNullable(false)
                     .setProperties(columnProperties)
                     .build());
             List<ColumnMetadata> finalColumns = ImmutableList.copyOf(copy);

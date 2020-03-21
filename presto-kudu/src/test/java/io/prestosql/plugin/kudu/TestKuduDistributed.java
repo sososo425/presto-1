@@ -13,10 +13,12 @@
  */
 package io.prestosql.plugin.kudu;
 
-import io.prestosql.testing.AbstractTestQueryFramework;
+import io.prestosql.testing.AbstractTestDistributedQueries;
 import io.prestosql.testing.QueryRunner;
+import io.prestosql.testing.sql.TestTable;
 import io.prestosql.tpch.TpchTable;
 import org.intellij.lang.annotations.Language;
+import org.testng.SkipException;
 import org.testng.annotations.Test;
 
 import java.util.Optional;
@@ -25,7 +27,7 @@ import static io.prestosql.plugin.kudu.KuduQueryRunnerFactory.createKuduQueryRun
 
 @Test
 public class TestKuduDistributed
-        extends AbstractTestQueryFramework
+        extends AbstractTestDistributedQueries
 {
     private TestingKuduServer kuduServer;
 
@@ -51,17 +53,17 @@ public class TestKuduDistributed
 
         assertUpdate("INSERT INTO test_insert (orderkey) VALUES (-1)", 1);
         assertUpdate("INSERT INTO test_insert (orderkey) VALUES (null)", 1);
-        assertUpdate("INSERT INTO test_insert (orderdate) VALUES (DATE '2001-01-01')", 1);
-        assertUpdate("INSERT INTO test_insert (orderkey, orderdate) VALUES (-2, DATE '2001-01-02')", 1);
-        assertUpdate("INSERT INTO test_insert (orderdate, orderkey) VALUES (DATE '2001-01-03', -3)", 1);
+        assertUpdate("INSERT INTO test_insert (orderdate) VALUES  ('2001-01-01')", 1);
+        assertUpdate("INSERT INTO test_insert (orderkey, orderdate) VALUES (-2, '2001-01-02')", 1);
+        assertUpdate("INSERT INTO test_insert (orderdate, orderkey) VALUES ('2001-01-03', -3)", 1);
         assertUpdate("INSERT INTO test_insert (totalprice) VALUES (1234)", 1);
 
         assertQuery("SELECT * FROM test_insert", query
                 + " UNION ALL SELECT null, -1, null"
                 + " UNION ALL SELECT null, null, null"
-                + " UNION ALL SELECT DATE '2001-01-01', null, null"
-                + " UNION ALL SELECT DATE '2001-01-02', -2, null"
-                + " UNION ALL SELECT DATE '2001-01-03', -3, null"
+                + " UNION ALL SELECT '2001-01-01', null, null"
+                + " UNION ALL SELECT '2001-01-02', -2, null"
+                + " UNION ALL SELECT '2001-01-03', -3, null"
                 + " UNION ALL SELECT null, null, 1234");
 
         // UNION query produces columns in the opposite order
@@ -74,5 +76,35 @@ public class TestKuduDistributed
                 "SELECT 2 * count(*) FROM orders");
 
         assertUpdate("DROP TABLE test_insert");
+    }
+
+    @Override
+    protected TestTable createTableWithDefaultColumns()
+    {
+        throw new SkipException("Accumulo connector does not support column default values");
+    }
+
+    @Override
+    public void testDescribeOutput()
+    {
+        // this connector uses a non-canonical type for varchar columns in tpch
+    }
+
+    @Override
+    public void testDescribeOutputNamedAndUnnamed()
+    {
+        // this connector uses a non-canonical type for varchar columns in tpch
+    }
+
+    @Override
+    protected boolean supportsViews()
+    {
+        return false;
+    }
+
+    @Override
+    protected boolean supportsArrays()
+    {
+        return false;
     }
 }

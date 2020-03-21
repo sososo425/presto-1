@@ -396,6 +396,7 @@ public class KuduClientSession
         setEncoding(name, builder, design);
         setCompression(name, builder, design);
         setTypeAttributes(columnMetadata, builder);
+        builder.nullable(columnMetadata.isNullable());
         return builder.build();
     }
 

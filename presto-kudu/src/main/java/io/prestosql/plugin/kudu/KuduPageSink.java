@@ -79,6 +79,7 @@ public class KuduPageSink
             KuduInsertTableHandle tableHandle)
     {
         this(connectorSession, clientSession, tableHandle.getTable(clientSession), tableHandle);
+        System.out.println("TBL22");
     }
 
     public KuduPageSink(

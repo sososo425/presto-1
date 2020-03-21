@@ -15,6 +15,8 @@ package io.prestosql.plugin.kudu.properties;
 
 import java.util.List;
 
+import static io.prestosql.plugin.kudu.KuduColumnHandle.ROW_ID;
+
 public class PartitionDesign
 {
     private List<HashPartitionDefinition> hash;
@@ -42,8 +44,10 @@ public class PartitionDesign
 
     public boolean hasPartitions()
     {
-        System.out.println("Hash " + hash + " " + range);
-        return hash != null && !hash.isEmpty() && !hash.get(0).getColumns().isEmpty()
-                || range != null && !range.getColumns().isEmpty();
+        if (hash != null) {
+            System.out.println("PTN " + hash + hash.get(0).getColumns().get(0).equals(ROW_ID) + " " + range.getColumns());
+        }
+        return hash != null && !hash.isEmpty() && !hash.get(0).getColumns().get(0).equals(ROW_ID)
+                || range != null && !range.getColumns().isEmpty() && !range.getColumns().get(0).equals(ROW_ID);
     }
 }
