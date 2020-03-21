@@ -263,7 +263,7 @@ public class KuduMetadata
     }
 
     @Override
-    public ConnectorInsertTableHandle beginInsert(ConnectorSession session, ConnectorTableHandle connectorTableHandle)
+    public ConnectorInsertTableHandle beginInsert(ConnectorSession session, ConnectorTableHandle connectorTableHandle, List<ColumnHandle> columnHandles)
     {
         KuduTableHandle tableHandle = (KuduTableHandle) connectorTableHandle;
 
@@ -273,7 +273,7 @@ public class KuduMetadata
         List<ColumnSchema> columns = schema.getColumns();
         List<Type> columnTypes = columns.stream()
                 .map(TypeHelper::fromKuduColumn).collect(toImmutableList());
-
+        System.out.println("Types to be inserted " + columnTypes + " " + columnHandles);
         return new KuduInsertTableHandle(
                 tableHandle.getSchemaTableName(),
                 columnTypes,

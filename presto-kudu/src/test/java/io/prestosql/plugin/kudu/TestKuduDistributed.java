@@ -13,25 +13,19 @@
  */
 package io.prestosql.plugin.kudu;
 
-import io.prestosql.testing.AbstractTestDistributedQueries;
-import io.prestosql.testing.MaterializedResult;
+import io.prestosql.testing.AbstractTestQueryFramework;
 import io.prestosql.testing.QueryRunner;
-import io.prestosql.testing.sql.TestTable;
 import io.prestosql.tpch.TpchTable;
-import org.testng.SkipException;
-import org.testng.annotations.AfterClass;
+import org.intellij.lang.annotations.Language;
 import org.testng.annotations.Test;
 
 import java.util.Optional;
 
 import static io.prestosql.plugin.kudu.KuduQueryRunnerFactory.createKuduQueryRunnerTpch;
-import static io.prestosql.spi.type.VarcharType.VARCHAR;
-import static io.prestosql.testing.MaterializedResult.resultBuilder;
-import static io.prestosql.testing.assertions.Assert.assertEquals;
 
 @Test
 public class TestKuduDistributed
-        extends AbstractTestDistributedQueries
+        extends AbstractTestQueryFramework
 {
     private TestingKuduServer kuduServer;
 
@@ -43,78 +37,42 @@ public class TestKuduDistributed
         return createKuduQueryRunnerTpch(kuduServer, Optional.of(""), TpchTable.getTables());
     }
 
-    @Override
-    public void testDescribeOutput()
+    @Test
+    public void testInsert()
     {
-        // this connector uses a non-canonical type for varchar columns in tpch
-    }
+        @Language("SQL") String query = "SELECT orderdate, orderkey, totalprice FROM orders";
 
-    @Override
-    public void testDescribeOutputNamedAndUnnamed()
-    {
-        // this connector uses a non-canonical type for varchar columns in tpch
-    }
+        assertUpdate("CREATE TABLE test_insert AS " + query + " WITH NO DATA", 0);
+        assertQuery("SELECT count(*) FROM test_insert", "SELECT 0");
 
-    @AfterClass(alwaysRun = true)
-    public void destroy()
-    {
-        kuduServer.close();
-    }
+        assertUpdate("INSERT INTO test_insert " + query, "SELECT count(*) FROM orders");
 
-    @Override
-    protected TestTable createTableWithDefaultColumns()
-    {
-        throw new SkipException("Kudu connector does not support column default values");
-    }
+        assertQuery("SELECT * FROM test_insert", query);
 
-    @Override
-    public void testCommentTable()
-    {
-        // Raptor connector currently does not support comment on table
-        assertQueryFails("COMMENT ON TABLE orders IS 'hello'", "This connector does not support setting table comments");
-    }
+        assertUpdate("INSERT INTO test_insert (orderkey) VALUES (-1)", 1);
+        assertUpdate("INSERT INTO test_insert (orderkey) VALUES (null)", 1);
+        assertUpdate("INSERT INTO test_insert (orderdate) VALUES (DATE '2001-01-01')", 1);
+        assertUpdate("INSERT INTO test_insert (orderkey, orderdate) VALUES (-2, DATE '2001-01-02')", 1);
+        assertUpdate("INSERT INTO test_insert (orderdate, orderkey) VALUES (DATE '2001-01-03', -3)", 1);
+        assertUpdate("INSERT INTO test_insert (totalprice) VALUES (1234)", 1);
 
-    @Override
-    public void testInsertWithCoercion()
-    {
-        // No support for char type
-    }
+        assertQuery("SELECT * FROM test_insert", query
+                + " UNION ALL SELECT null, -1, null"
+                + " UNION ALL SELECT null, null, null"
+                + " UNION ALL SELECT DATE '2001-01-01', null, null"
+                + " UNION ALL SELECT DATE '2001-01-02', -2, null"
+                + " UNION ALL SELECT DATE '2001-01-03', -3, null"
+                + " UNION ALL SELECT null, null, 1234");
 
-    @Override
-    protected boolean supportsViews()
-    {
-        return false;
-    }
+        // UNION query produces columns in the opposite order
+        // of how they are declared in the table schema
+        assertUpdate(
+                "INSERT INTO test_insert (orderkey, orderdate, totalprice) " +
+                        "SELECT orderkey, orderdate, totalprice FROM orders " +
+                        "UNION ALL " +
+                        "SELECT orderkey, orderdate, totalprice FROM orders",
+                "SELECT 2 * count(*) FROM orders");
 
-    @Override
-    public void testWrittenStats()
-    {
-        // TODO Kudu connector supports CTAS and inserts, but the test would fail
-    }
-
-    @Override
-    protected boolean supportsArrays()
-    {
-        return false;
-    }
-
-    @Override
-    public void testShowColumns()
-    {
-        MaterializedResult actual = computeActual("SHOW COLUMNS FROM orders");
-
-        MaterializedResult expectedParametrizedVarchar = resultBuilder(getSession(), VARCHAR, VARCHAR, VARCHAR, VARCHAR)
-                .row("orderkey", "bigint", "", "")
-                .row("custkey", "bigint", "", "")
-                .row("orderstatus", "varchar", "", "")
-                .row("totalprice", "double", "", "")
-                .row("orderdate", "varchar", "", "")
-                .row("orderpriority", "varchar", "", "")
-                .row("clerk", "varchar", "", "")
-                .row("shippriority", "integer", "", "")
-                .row("comment", "varchar", "", "")
-                .build();
-
-        assertEquals(actual, expectedParametrizedVarchar);
+        assertUpdate("DROP TABLE test_insert");
     }
 }
