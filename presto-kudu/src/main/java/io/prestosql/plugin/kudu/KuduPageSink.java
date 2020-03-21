@@ -194,6 +194,12 @@ public class KuduPageSink
                 }
                 catch (Exception e) {
                     System.out.println("Type " + type + " " + block + " " + destChannel);
+                    try {
+                        System.out.println("2!2!2! " + this.generateUUID + " " + table.getPartitionSchema() + " " + table.getRangePartitions(100L) + " " + table.getName() + " " + table.getSchema().getColumns());
+                    }
+                    catch (Exception e) {
+                        e.printStackTrace();
+                    }
                     row.addString(destChannel, type.getSlice(block, position).toStringUtf8());
                 }
             }
