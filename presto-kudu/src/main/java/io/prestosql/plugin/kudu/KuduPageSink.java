@@ -124,7 +124,7 @@ public class KuduPageSink
                     appendColumn(row, page, position, channel, channel + start);
                 }
                 catch (Exception e) {
-                    System.out.println("Type " + columnTypes + " " + page.getBlock(channel));
+                    System.out.println("Type " + columnTypes + " " + columnTypes.get(channel) + " " + page.getBlock(channel));
                     appendColumn(row, page, position, channel, channel + start);
                 }
             }
