@@ -102,48 +102,6 @@ public class TestKuduDistributedQueries
     }
 
     @Override
-    public void testScalarSubquery()
-    {
-        // TODO https://github.com/prestosql/presto/issues/3170
-    }
-
-    @Override
-    public void testScalarSubqueryWithGroupBy()
-    {
-        // TODO https://github.com/prestosql/presto/issues/3170
-    }
-
-    @Override
-    public void testCorrelatedJoin()
-    {
-        // TODO https://github.com/prestosql/presto/issues/3170
-    }
-
-    @Override
-    public void testCorrelatedNonAggregationScalarSubqueries()
-    {
-        // TODO https://github.com/prestosql/presto/issues/3170
-    }
-
-    @Override
-    public void testCorrelatedScalarSubqueries()
-    {
-        // TODO https://github.com/prestosql/presto/issues/3170
-    }
-
-    @Override
-    public void testCorrelatedScalarSubqueriesWithScalarAggregation()
-    {
-        // TODO https://github.com/prestosql/presto/issues/3170
-    }
-
-    @Override
-    public void testCorrelatedScalarSubqueriesWithScalarAggregationAndEqualityPredicatesInWhere()
-    {
-        // TODO https://github.com/prestosql/presto/issues/3170
-    }
-
-    @Override
     public void testDelete()
     {
         // TODO https://github.com/prestosql/presto/issues/3170
@@ -166,7 +124,7 @@ public class TestKuduDistributedQueries
                 .row("comment", "varchar", "nullable, encoding=auto, compression=default", "")
                 .build();
 
-        assertEquals(actual, expectedParametrizedVarchar);
+        assetEquals(actual, expectedParametrizedVarchar);
     }
 
     @Override
@@ -186,12 +144,6 @@ public class TestKuduDistributedQueries
     {
         // Kudu connector currently does not support comment on table
         assertQueryFails("COMMENT ON TABLE orders IS 'hello'", "This connector does not support setting table comments");
-    }
-
-    @Override
-    public void testUnionWithAggregation()
-    {
-        // TODO https://github.com/prestosql/presto/issues/3170
     }
 
     @Override
