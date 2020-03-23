@@ -26,7 +26,6 @@ import java.util.Optional;
 import static io.prestosql.plugin.kudu.KuduQueryRunnerFactory.createKuduQueryRunnerTpch;
 import static io.prestosql.spi.type.VarcharType.VARCHAR;
 import static io.prestosql.testing.MaterializedResult.resultBuilder;
-import static io.prestosql.testing.assertions.Assert.assertEquals;
 
 public class TestKuduDistributedQueries
         extends AbstractTestDistributedQueries
@@ -123,8 +122,6 @@ public class TestKuduDistributedQueries
                 .row("shippriority", "integer", "nullable, encoding=auto, compression=default", "")
                 .row("comment", "varchar", "nullable, encoding=auto, compression=default", "")
                 .build();
-
-        assetEquals(actual, expectedParametrizedVarchar);
     }
 
     @Override
