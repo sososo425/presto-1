@@ -23,7 +23,9 @@ import org.apache.kudu.client.RowResult;
 import org.apache.kudu.client.RowResultIterator;
 
 import java.lang.reflect.Field;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class KuduRecordCursor
         implements RecordCursor
@@ -38,8 +40,9 @@ public class KuduRecordCursor
 
     private long totalBytes;
     private boolean started;
+    private Map<Integer, Integer> lookup = new HashMap<>();
 
-    public KuduRecordCursor(KuduScanner scanner, List<Type> columnTypes)
+    public KuduRecordCursor(KuduScanner scanner, List<Type> columnTypes, List<KuduColumnHandle> columnHandles)
     {
         this.scanner = scanner;
         this.columnTypes = columnTypes;
@@ -52,6 +55,11 @@ public class KuduRecordCursor
             // ignore
         }
         this.rowDataField = field;
+        int index = 0;
+        for (KuduColumnHandle columnHandle : columnHandles) {
+            lookup.put(index, scanner.getProjectionSchema().getColumnIndex(columnHandle.getName()));
+            index++;
+        }
     }
 
     @Override
@@ -74,7 +82,7 @@ public class KuduRecordCursor
 
     protected int mapping(int field)
     {
-        return field;
+        return lookup.get(field);
     }
 
     /**

@@ -32,14 +32,14 @@ public class KuduRecordSet
 {
     private final KuduClientSession clientSession;
     private final KuduSplit kuduSplit;
-    private final List<? extends ColumnHandle> columns;
+    private final List<KuduColumnHandle> columns;
     private final boolean containsVirtualRowId;
 
     public KuduRecordSet(KuduClientSession clientSession, KuduSplit kuduSplit, List<? extends ColumnHandle> columns)
     {
         this.clientSession = clientSession;
         this.kuduSplit = kuduSplit;
-        this.columns = columns;
+        this.columns = columns.stream().map(KuduColumnHandle.class::cast).collect(toImmutableList());
         this.containsVirtualRowId = columns.contains(KuduColumnHandle.ROW_ID_HANDLE);
     }
 
@@ -47,7 +47,7 @@ public class KuduRecordSet
     public List<Type> getColumnTypes()
     {
         return columns.stream()
-                .map(column -> ((KuduColumnHandle) column).getType())
+                .map(KuduColumnHandle::getType)
                 .collect(toImmutableList());
     }
 
@@ -56,12 +56,12 @@ public class KuduRecordSet
     {
         KuduScanner scanner = clientSession.createScanner(kuduSplit);
         if (!containsVirtualRowId) {
-            return new KuduRecordCursor(scanner, getColumnTypes());
+            return new KuduRecordCursor(scanner, getColumnTypes(), columns);
         }
         else {
             Map<Integer, Integer> fieldMapping = new HashMap<>();
             for (int i = 0; i < columns.size(); i++) {
-                KuduColumnHandle handle = (KuduColumnHandle) columns.get(i);
+                KuduColumnHandle handle = columns.get(i);
                 if (!handle.isVirtualRowId()) {
                     fieldMapping.put(i, handle.getOrdinalPosition());
                 }
@@ -71,7 +71,7 @@ public class KuduRecordSet
             }
 
             KuduTable table = getTable();
-            return new KuduRecordCursorWithVirtualRowId(scanner, table, getColumnTypes(), fieldMapping);
+            return new KuduRecordCursorWithVirtualRowId(scanner, table, getColumnTypes(), fieldMapping, columns);
         }
     }
 
