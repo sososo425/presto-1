@@ -35,10 +35,9 @@ public class KuduRecordCursorWithVirtualRowId
 
     public KuduRecordCursorWithVirtualRowId(KuduScanner scanner, KuduTable table,
             List<Type> columnTypes,
-            Map<Integer, Integer> fieldMapping,
-            List<KuduColumnHandle> columnHandles)
+            Map<Integer, Integer> fieldMapping)
     {
-        super(scanner, columnTypes, columnHandles);
+        super(scanner, columnTypes);
         this.table = table;
         this.fieldMapping = fieldMapping;
     }

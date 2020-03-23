@@ -101,12 +101,6 @@ public class TestKuduDistributedQueries
     }
 
     @Override
-    public void testDelete()
-    {
-        // TODO https://github.com/prestosql/presto/issues/3170
-    }
-
-    @Override
     public void testShowColumns()
     {
         MaterializedResult actual = computeActual("SHOW COLUMNS FROM orders");
@@ -147,17 +141,5 @@ public class TestKuduDistributedQueries
     public void testWrittenStats()
     {
         // TODO Kudu connector supports CTAS and inserts, but the test would fail
-    }
-
-    @Override
-    public void testSelectAllFromOuterScopeTable()
-    {
-        // TODO Fix Kudu projection pushdown
-    }
-
-    @Override
-    public void testTableSampleWithFiltering()
-    {
-        // TODO https://github.com/prestosql/presto/issues/3170
     }
 }

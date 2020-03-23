@@ -56,7 +56,13 @@ public class KuduRecordSet
     {
         KuduScanner scanner = clientSession.createScanner(kuduSplit);
         if (!containsVirtualRowId) {
-            return new KuduRecordCursor(scanner, getColumnTypes(), columns);
+            Map<Integer, Integer> map = new HashMap<>();
+            int index = 0;
+            for (KuduColumnHandle columnHandle : columns) {
+                map.put(index, scanner.getProjectionSchema().getColumnIndex(columnHandle.getName()));
+                index++;
+            }
+            return new KuduRecordCursorWithVirtualRowId(scanner, getTable(), getColumnTypes(), map);
         }
         else {
             Map<Integer, Integer> fieldMapping = new HashMap<>();
@@ -71,7 +77,7 @@ public class KuduRecordSet
             }
 
             KuduTable table = getTable();
-            return new KuduRecordCursorWithVirtualRowId(scanner, table, getColumnTypes(), fieldMapping, columns);
+            return new KuduRecordCursorWithVirtualRowId(scanner, table, getColumnTypes(), fieldMapping);
         }
     }
 
