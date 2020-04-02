@@ -20,20 +20,33 @@ jobs:
             13
         ]
     steps:
+      - name: Space -1
+        run: df -h
       - uses: actions/checkout@v2
+      - name: Space 0
+        run: df -h
       - uses: actions/setup-java@v1
         with:
           java-version: ${{ matrix.java-version }}
+      - name: Space
+        run: df -h
       - name: Maven Checks
         run: |
           export MAVEN_OPTS="${MAVEN_INSTALL_OPTS}"
           ./bin/retry ./mvnw install -B -V -T C1 -DskipTests -P ci -pl '!presto-server-rpm'
+      - name: Space 1
+        run: df -h
       - name: Test Server RPM
         run: |
           export MAVEN_OPTS="${MAVEN_INSTALL_OPTS}"
           ./bin/retry ./mvnw install -B -P ci -pl presto-server-rpm
+          rm -rf ~/.m2/repository
+      - name: Space 2
+        run: df -h
       - name: Test Docker Image
         run: docker/build-local.sh
+      - name: Space 3
+        run: df -h
 
   error-prone-checks:
     runs-on: ubuntu-latest
