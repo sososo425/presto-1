@@ -39,8 +39,7 @@ jobs:
       - name: Test Server RPM
         run: |
           export MAVEN_OPTS="${MAVEN_INSTALL_OPTS}"
-          ./bin/retry ./mvnw install -B -P ci -pl presto-server-rpm
-          rm -rf ~/.m2/repository
+          ./mvnw install -B -P ci -pl presto-server-rpm
       - name: Space 2
         run: df -h
       - name: Test Docker Image
