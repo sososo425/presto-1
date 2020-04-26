@@ -89,8 +89,6 @@ public abstract class AbstractKuduIntegrationSmokeTest
                         ")\n" +
                         "WITH (\n" +
                         "   number_of_replicas = 3,\n" +
-                        "   partition_by_hash_buckets = 2,\n" +
-                        "   partition_by_hash_columns = ARRAY['row_uuid'],\n" +
                         "   partition_by_range_columns = ARRAY['row_uuid'],\n" +
                         "   range_partitions = '[{\"lower\":null,\"upper\":null}]'\n" +
                         ")");
