@@ -201,6 +201,7 @@ public class KuduClientSession
         }
 
         builder.setProjectedColumnIndexes(columnIndexes);
+        tableHandle.getLimit().ifPresent(builder::limit);
 
         List<KuduScanToken> tokens = builder.build();
         return tokens.stream()

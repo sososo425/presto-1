@@ -31,6 +31,7 @@ import io.prestosql.spi.connector.ConnectorTableMetadata;
 import io.prestosql.spi.connector.ConnectorTableProperties;
 import io.prestosql.spi.connector.Constraint;
 import io.prestosql.spi.connector.ConstraintApplicationResult;
+import io.prestosql.spi.connector.LimitApplicationResult;
 import io.prestosql.spi.connector.NotFoundException;
 import io.prestosql.spi.connector.ProjectionApplicationResult;
 import io.prestosql.spi.connector.ProjectionApplicationResult.Assignment;
@@ -56,6 +57,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.OptionalLong;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static java.util.Objects.requireNonNull;
@@ -193,7 +195,7 @@ public class KuduMetadata
     {
         try {
             KuduTable table = clientSession.openTable(schemaTableName);
-            return new KuduTableHandle(schemaTableName, table, TupleDomain.all(), Optional.empty(), false);
+            return new KuduTableHandle(schemaTableName, table, TupleDomain.all(), Optional.empty(), false, OptionalLong.empty());
         }
         catch (NotFoundException e) {
             return null;
@@ -357,7 +359,7 @@ public class KuduMetadata
     public ConnectorTableHandle beginDelete(ConnectorSession session, ConnectorTableHandle table)
     {
         KuduTableHandle handle = (KuduTableHandle) table;
-        return new KuduTableHandle(handle.getSchemaTableName(), handle.getConstraint(), handle.getDesiredColumns(), true);
+        return new KuduTableHandle(handle.getSchemaTableName(), handle.getConstraint(), handle.getDesiredColumns(), true, handle.getLimit());
     }
 
     @Override
@@ -394,7 +396,8 @@ public class KuduMetadata
                 handle.getTable(clientSession),
                 newDomain,
                 handle.getDesiredColumns(),
-                handle.isDeleteHandle());
+                handle.isDeleteHandle(),
+                handle.getLimit());
 
         return Optional.of(new ConstraintApplicationResult<>(handle, constraint.getSummary()));
     }
@@ -450,8 +453,29 @@ public class KuduMetadata
                 handle.getTable(clientSession),
                 handle.getConstraint(),
                 Optional.of(desiredColumns.build()),
-                handle.isDeleteHandle());
+                handle.isDeleteHandle(),
+                handle.getLimit());
 
         return Optional.of(new ProjectionApplicationResult<>(handle, projections, assignmentList.build()));
+    }
+
+    @Override
+    public Optional<LimitApplicationResult<ConnectorTableHandle>> applyLimit(ConnectorSession session, ConnectorTableHandle table, long limit)
+    {
+        KuduTableHandle handle = (KuduTableHandle) table;
+
+        if (handle.getLimit().isPresent() && handle.getLimit().getAsLong() <= limit) {
+            return Optional.empty();
+        }
+
+        handle = new KuduTableHandle(
+                handle.getSchemaTableName(),
+                handle.getTable(clientSession),
+                handle.getConstraint(),
+                handle.getDesiredColumns(),
+                handle.isDeleteHandle(),
+                OptionalLong.of(limit));
+
+        return Optional.of(new LimitApplicationResult<>(handle, false));
     }
 }
